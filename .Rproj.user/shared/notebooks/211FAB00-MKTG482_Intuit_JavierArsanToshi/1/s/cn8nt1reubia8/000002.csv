@@ -1,0 +1,8 @@
+"0","intuit_log_res<- intuit%>% "
+"0","  filter(target_log==1) %>% "
+"0","  summarise(frac_mailed=n()/nrow(intuit),resp_rate=mean(res.numeric==1)) %>% "
+"0","  mutate(num_mailed=50000*frac_mailed,"
+"0","         num_responded=resp_rate*num_mailed,"
+"0","         profit=180*num_responded-1.6*num_mailed,"
+"0","         ave_profit=profit/num_mailed)"
+"0","intuit_log_res"

@@ -78,7 +78,7 @@ intuit %>%
 
 ```
 
-##For the customers in the dataset, create a new variable (call it “target_log”) with a value of 1 if the customer’s predicted probability is greater than or equal to the breakeven response rate(4%) and 0 otherwise.
+For the customers in the dataset, create a new variable (call it “target_log”) with a value of 1 if the customer’s predicted probability is greater than or equal to the breakeven response rate(4%) and 0 otherwise.
 ```{r}
 intuit <- intuit %>%
   mutate(target_log=1*(pred_prob_log>= BER))
@@ -87,7 +87,7 @@ intuit <- intuit %>%
 ```{r}
 intuit %>% 
   group_by(target_log) %>% 
-  summarise(num_target=sum(target_log), perc_target=num_target/50000, response_rate=mean(pred_prob_log)) 
+  summarise(num_target=n(), perc_target=num_target/50000, response_rate=mean(pred_prob_log)) 
 ```
 
 Of all the customer base, 33% of the customer are the target and response rate is 7.9%
@@ -104,7 +104,7 @@ intuit_log_res<- intuit%>%
 intuit_log_res
 ```
 
-###memo:in this assignment, profit maximizing is our goal. Is it better to lower the threashold to target more customers? 
+###memo:in this assignment, profit maximizing is our goal. Is it better to lower the threshold to target more customers? 
 If I run
  intuit <- intuit %>%
   mutate(target_log=1*(pred_prob_log>= BER-0.0349))

@@ -1,0 +1,114 @@
+---
+title: "Intuit"
+author: "Javier Urbina, Ahsan Kamran, Toshi Murakami"
+date: "5/4/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load Packages,
+```{r}
+#library(knitr)
+#library(psych)
+#library(statar)
+library(tidyverse)
+library(janitor)
+library(dplyr)
+```
+
+#About This file
+ This file is about MKTG482 group assignment "Intuite".
+ Section:32, Name: Javier Urbina, Ahsan Kamran, Toshi Murakami
+
+#Data and Preliminaries
+ First, read in the data and take a look at the variables in the dataset.
+ 
+```{r}
+rm(list=ls())
+load("intuit_online.Rdata")
+```
+
+#Part1 Profit Analysis and Break Even
+ Average profit from convert one customer into Online : $180  
+ Cost/target : $1.60
+ Target Profit : $5.6
+ Break Even Response rate is described as 7.2/180 = 4%
+
+```{r}
+BER=7.2/180
+BER
+```
+
+#Part2 Logistic Regression
+
+##Estimate a logistic regression model using “res” as the dependent
+```{r}
+ intuit_logit1 <- glm(res ~ speeddown+speedup+last+numords+dollars+sincepurch+version2013+upgraded+payroll+bizflag+sex+income+medhvalue, family = binomial(logit),data=intuit)
+summary(intuit_logit1)
+```
+
+##Transform the estimated coefficients and confidence intervals to odds ratios.
+```{r}
+ cbind(COEF=coef(intuit_logit1), confint(intuit_logit1))
+ exp(cbind(OR=coef(intuit_logit1), confint(intuit_logit1)))
+```
+
+##Assign each customer to a decile based on his or her predicted probability of purchase.   Assign those with the highest predicted probability of purchase to decile 1 and those with the lowest predicted probability of purchase to decile 10.
+
+First, add the prediced values to intuit data frame.
+```{r}
+ intuit <- intuit %>% 
+  mutate(pred_prob_log = predict(intuit_logit1, type = "response"))
+```
+
+```{r}
+#assign a decile to intuit dataset
+intuit <- intuit %>%
+  mutate(pred_prob_dec = ntile(-pred_prob_log, 10))
+```
+
+```{r}
+intuit %>% 
+  group_by(pred_prob_dec) %>% 
+   summarize(response_rate = mean(res.numeric))%>%
+   ggplot() + geom_col(aes(x=pred_prob_dec,y=response_rate))+ scale_x_continuous(breaks=c(1,2,3,4,5,6,7,8,9,10))
+
+```
+
+For the customers in the dataset, create a new variable (call it “target_log”) with a value of 1 if the customer’s predicted probability is greater than or equal to the breakeven response rate(4%) and 0 otherwise.
+```{r}
+intuit <- intuit %>%
+  mutate(target_log=1*(pred_prob_log>= BER))
+```
+
+```{r}
+intuit %>% 
+  group_by(target_log) %>% 
+  summarise(num_target=n(), perc_target=num_target/50000, response_rate=mean(pred_prob_log)) 
+```
+
+Of all the customer base, 33% of the customer are the target and response rate is 7.9%
+
+##Profitability analysis for Logistic Regression
+```{r}
+intuit_log_res<- intuit%>% 
+  filter(target_log==1) %>% 
+  summarise(frac_mailed=n()/nrow(intuit),resp_rate=mean(res.numeric==1)) %>% 
+  mutate(num_mailed=50000*frac_mailed,
+         num_responded=resp_rate*num_mailed,
+         profit=180*num_responded-1.6*num_mailed,
+         ave_profit=profit/num_mailed)
+intuit_log_res
+```
+
+###memo:in this assignment, profit maximizing is our goal. Is it better to lower the threshold to target more customers? 
+If I run
+ intuit <- intuit %>%
+  mutate(target_log=1*(pred_prob_log>= BER-0.0349))
+I got 273,063 for total profit and get average profit of 5.61/target.
+
+#Part3 Neural Network
+
