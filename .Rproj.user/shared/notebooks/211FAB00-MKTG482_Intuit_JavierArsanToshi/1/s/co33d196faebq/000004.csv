@@ -1,0 +1,2 @@
+"0","pred_nn_training <- predict(nn_intuit, type=""raw"")"
+"0","pred_nn_test <- predict(nn_intuit, newdata=intuit_test, type=""raw"")"

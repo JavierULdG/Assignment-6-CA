@@ -1,0 +1,2 @@
+"0","gainsplot(pred_nn_training, pred_nn_test,label.var=intuit_train$res)"
+"2","number of rows of result is not a multiple of vector length (arg 2)"

@@ -11,12 +11,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Load Packages,
 ```{r}
-#library(knitr)
-#library(psych)
-#library(statar)
+library(dplyr)
+library(knitr)
+library(psych)
+library(statar)
 library(tidyverse)
 library(janitor)
-library(dplyr)
+library(nnet)
+library(sjPlot)
+library(devtools)
+library(mktg482)
 ```
 
 #About This file
@@ -52,8 +56,8 @@ summary(intuit_logit1)
 
 ##Transform the estimated coefficients and confidence intervals to odds ratios.
 ```{r}
- cbind(COEF=coef(intuit_logit1), confint(intuit_logit1))
- exp(cbind(OR=coef(intuit_logit1), confint(intuit_logit1)))
+ cbind(COEF=coef(intuit_logit1), confint.default(intuit_logit1))
+ exp(cbind(OR=coef(intuit_logit1), confint.default(intuit_logit1)))
 ```
 
 ##Assign each customer to a decile based on his or her predicted probability of purchase.   Assign those with the highest predicted probability of purchase to decile 1 and those with the lowest predicted probability of purchase to decile 10.
@@ -112,3 +116,37 @@ I got 273,063 for total profit and get average profit of 5.61/target.
 
 #Part3 Neural Network
 
+
+Before creating the Neural network we change the variables to factors 
+
+```{r}
+intuit<-intuit%>% mutate(res=factor(res),state=factor(state), version2013=factor(version2013),upgraded=factor(upgraded), payroll=factor(payroll), bizflag=factor(bizflag),sex=factor(sex))
+```
+
+
+Now wecreate the training and testing frames
+```{r}
+intuit_train<-intuit%>% filter(training==1)
+
+intuit_test<-intuit%>% filter(training==0)
+```
+
+
+No we will create the Neural Network model and train it with the training set
+```{r}
+
+nn_intuit <- nnet(res ~ speeddown+speedup+last+numords+dollars+sincepurch+version2013+upgraded+payroll+bizflag+sex+income+medhvalue, data=intuit_train, size= 5,
+decay=0.001, maxit=1000)
+```
+
+Next, I will create a prediction for the probability of purchase so we can compare it to the Logit model
+```{r}
+pred_nn_training <- predict(nn_intuit, type="raw")
+pred_nn_test <- predict(nn_intuit, newdata=intuit_test, type="raw")
+```
+
+
+Now I will run the gainsplot to evaluete how the model performs in the test versus training
+```{r}
+gainsplot(pred_nn_training, pred_nn_test,label.var=intuit_train$res)
+```

@@ -1,0 +1,2 @@
+"0"," intuit <- intuit %>% "
+"0","  mutate(pred_prob_log = predict(intuit_logit1, type = ""response""))"

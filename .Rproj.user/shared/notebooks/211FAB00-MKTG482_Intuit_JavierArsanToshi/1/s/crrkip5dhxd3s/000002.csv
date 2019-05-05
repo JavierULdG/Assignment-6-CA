@@ -1,0 +1,1 @@
+"0","intuit<-intuit%>% mutate(res=factor(res),state=factor(state), version2013=factor(version2013),upgraded=factor(upgraded), payroll=factor(payroll), bizflag=factor(bizflag),sex=factor(sex))"

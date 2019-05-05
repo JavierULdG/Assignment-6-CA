@@ -1,0 +1,3 @@
+"0","intuit_train<-intuit%>% filter(training==1)"
+"0",""
+"0","intuit_test<-intuit%>% filter(training==0)"

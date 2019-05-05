@@ -1,0 +1,46 @@
+"0",""
+"0","nn_intuit <- nnet(res ~ speeddown+speedup+last+numords+dollars+sincepurch+version2013+upgraded+payroll+bizflag+sex+income+medhvalue, data=intuit_train, size= 5,"
+"0","decay=0.001, maxit=1000)"
+"1","# weights: "
+"1"," "
+"1","81"
+"1","
+"
+"1","initial  value 41308.740235 
+"
+"1","iter  10 value 5532.984397
+"
+"1","iter  20 value 5483.458505
+"
+"1","iter  30 value 5448.832143
+"
+"1","iter  40 value 5399.721918
+"
+"1","iter  50 value 5229.644310
+"
+"1","iter  60 value 5131.144308
+"
+"1","iter  70 value 4918.926502
+"
+"1","iter  80 value 4880.593589
+"
+"1","iter  90 value 4866.792790
+"
+"1","iter 100 value 4859.544023
+"
+"1","iter 110 value 4857.950450
+"
+"1","iter 120 value 4857.886192
+"
+"1","iter 130 value 4857.003281
+"
+"1","iter 140 value 4856.247878
+"
+"1","iter 150 value 4855.906970
+"
+"1","iter 150 value 4855.906967
+"
+"1","final  value 4855.906967 
+"
+"1","converged
+"

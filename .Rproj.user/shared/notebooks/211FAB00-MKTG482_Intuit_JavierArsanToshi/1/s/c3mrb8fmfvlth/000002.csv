@@ -1,0 +1,2 @@
+"0","intuit <- intuit %>%"
+"0","  mutate(target_log=1*(pred_prob_log>= BER))"

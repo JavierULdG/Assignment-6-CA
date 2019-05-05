@@ -1,0 +1,3 @@
+"0","#assign a decile to intuit dataset"
+"0","intuit <- intuit %>%"
+"0","  mutate(pred_prob_dec = ntile(-pred_prob_log, 10))"

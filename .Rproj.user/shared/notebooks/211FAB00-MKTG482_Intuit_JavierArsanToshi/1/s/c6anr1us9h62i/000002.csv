@@ -1,5 +1,0 @@
-"0","intuit %>% "
-"0","  group_by(pred_prob_dec) %>% "
-"0","   summarize(response_rate = mean(res.numeric))%>%"
-"0","   ggplot() + geom_col(aes(x=pred_prob_dec,y=response_rate))+ scale_x_continuous(breaks=c(1,2,3,4,5,6,7,8,9,10))"
-"0",""
