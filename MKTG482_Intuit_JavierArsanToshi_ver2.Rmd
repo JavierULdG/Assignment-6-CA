@@ -97,7 +97,7 @@ For the customers in the dataset, create a new variable (call it ?gtarget?h) wit
 options(encoding = "utf-8")
 
 intuit.wave2<-pred_nn5_wave2 %>%
-  mutate(target=1*(pred_wave2>= BER))
+  mutate(target=1*(pred_wave2>= .009))
 ```
 
 
@@ -109,7 +109,7 @@ intuit.wave2 %>%
 
 Of all the customer base, 32.7% of the customer are the target and response rate is 9.6%
 
-##Profitability analysis for Logistic Regression
+##Profitability analysis for Neural Network
 ```{r}
 intuit_wave2_res<- intuit.wave2%>% 
   filter(target==1) %>% 
@@ -124,10 +124,47 @@ intuit_wave2_res
 
 So basically if we decide to send a email to all the customers who exceeds the break even rate of 4%, we get 9% response rate, and profit of $129,330(average profit of $15.7). We can lower the threashold(now it is 4%) and send broader customer base(our objective is to maximize profit not ROI).
 
+```{r}
+i<-0
+max_profit<-0
+max_i<-0
+ave_profit<-0
+while ( i<1 ){
+  i<-i+0.001
+  
+intuit.wave2<-pred_nn5_wave2 %>%
+  mutate(target=1*(pred_wave2>= i))
+
+intuit.wave2 %>% 
+  group_by(target) %>% 
+  summarise(num_target=n(), perc_target=num_target/25000, response_rate=mean(pred_wave2)) 
+
+intuit_wave2_res<- intuit.wave2%>% 
+  filter(target==1) %>% 
+  summarise(frac_mailed=n()/25000, resp_rate=mean(pred_wave2)) %>% 
+  mutate(num_mailed=25000*frac_mailed,
+         num_responded=resp_rate*num_mailed,
+         profit=180*num_responded-1.6*num_mailed,
+         ave_profit<-profit/num_mailed)
+
+if(ave_profit>max_profit){
+  max_profit<-ave_profit
+  max_i=i
+  }
+}
+max_profit
+max_i
+
+```
+
 
 ```{r}
 #create dataset for submit
 intuit_wave2_submit <- intuit.wave2 %>% 
-  mutate(id=id, best.score=pred_wave2, target.wave2=target, group="Javier_Ahsan_Toshi",section="32")
+  mutate(id=id, best.score=pred_wave2, target.wave2=target, group="Javier_Ahsan_Toshi",section=32)%>%
+  select(id,best.score,target.wave2,group,section)
+
+saveRDS(intuit_wave2_submit,"Javier_Ahsan_Toshi.RDS")
+
 ```
 
