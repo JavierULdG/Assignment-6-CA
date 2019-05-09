@@ -1,32 +1,21 @@
 ---
-title: "Intuit Online Scratch"
-output: html_document
+title: "Intuit Online"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options(encoding = "utf-8")
+
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
+#Intuit Online Case
+ This is a group assignment for MKTG482. 
+ Group member: Javier Urbina, Arsan Kamran, Toshi Murakami
+ 
+##Load data and library
 ```{r}
 library(tidyverse)
 library(mktg482)
@@ -38,26 +27,35 @@ load("intuit_online.Rdata")
 ```
 
 
-Split Data
+##Split Data into test and training
 
 ```{r}
 intuit_training <- intuit %>% filter(training==1)
 intuit_test<-intuit %>% filter(training==0)
 ```
 
-NN
+##Neural Network 
 
 ```{r}
-intuit_nn <- nnet(res~speeddown+speedup+last+numords+dollars+sincepurch+version2013+upgraded+payroll+bizflag+sex+income+medhvalue,data=intuit_training, size=5, decay=0.01, maxit=1000)
+intuit_nn5 <- nnet(res~speeddown+speedup+last+numords+dollars+sincepurch+version2013+upgraded+payroll+bizflag+sex+income+medhvalue,data=intuit_training, size=5, decay=0.01, maxit=1000)
+
+intuit_nn10 <- nnet(res~speeddown+speedup+last+numords+dollars+sincepurch+version2013+upgraded+payroll+bizflag+sex+income+medhvalue,data=intuit_training, size=10, decay=0.01, maxit=1000)
+
 ```
+
 
 ```{r}
-pred_nn_training<- predict(intuit_nn,type="raw")
-pred_nn_test<- predict(intuit_nn,newdata = intuit_test,type="raw")
+pred_nn5_training<- predict(intuit_nn5,type="raw")
+pred_nn5_test<- predict(intuit_nn5,newdata = intuit_test,type="raw")
+
+
+pred_nn10_training<- predict(intuit_nn10,type="raw")
+pred_nn10_test<- predict(intuit_nn10,newdata = intuit_test,type="raw")
+
 ```
 
 
-Logistic Regression
+##Logistic Regression
 
 ```{r}
 intuit_lr<-glm(res~speeddown+speedup+last+numords+dollars+sincepurch+version2013+upgraded+payroll+bizflag+sex+income+medhvalue,family=binomial, data=intuit_training)
@@ -66,10 +64,62 @@ pred_lr_training<-predict(intuit_lr, type="response")
 pred_lr_test<-predict(intuit_lr,newdata=intuit_test ,type="response")
 ```
 
-Model Performance comparison
+##Model Performance comparison
 
 ```{r}
-gainsplot(pred_nn_test,pred_lr_test, label.var =intuit_test$res )
-gainsplot(pred_nn_training,pred_lr_training, label.var =intuit_training$res )
+gainsplot(pred_nn5_test,pred_nn10_test,pred_lr_test, label.var =intuit_test$res )
+gainsplot(pred_nn5_training,pred_nn10_training,pred_lr_training, label.var =intuit_training$res )
 ```
 
+In each NN prediction works better than logistic regression, thus we decided to use NN model.
+In NN models, 10 layer has more overfitting problem than 5 layer model. Thus we decided to use 5 layer model.
+
+Assign NN result to Wave2 data.
+```{r}
+pred_nn5_wave2<- intuit.wave2 %>% 
+  mutate(pred_wave2=predict(intuit_nn5,newdata = intuit.wave2,type="raw"))
+```
+
+##Calculate break even rate
+
+ Cost/target : $1.60
+ Target Profit : $5.6
+ Break Even Response rate is described as 7.2/180 = 4%
+
+```{r}
+BER=7.2/180
+BER
+```
+
+##Set target customers
+For the customers in the dataset, create a new variable (call it ÅgtargetÅh) with a value of 1 if the customerÅfs predicted probability is greater than or equal to the breakeven response rate(4%) and 0 otherwise.
+```{r}
+options(encoding = "utf-8")
+
+intuit.wave2<-pred_nn5_wave2 %>%
+  mutate(target=1*(pred_wave2>= BER))
+```
+
+
+```{r}
+intuit.wave2 %>% 
+  group_by(target) %>% 
+  summarise(num_target=n(), perc_target=num_target/25000, response_rate=mean(pred_wave2)) 
+```
+
+Of all the customer base, 32.7% of the customer are the target and response rate is 9.6%
+
+##Profitability analysis for Logistic Regression
+```{r}
+intuit_wave2_res<- intuit.wave2%>% 
+  filter(target==1) %>% 
+  summarise(frac_mailed=n()/25000, resp_rate=mean(pred_wave2)) %>% 
+  mutate(num_mailed=25000*frac_mailed,
+         num_responded=resp_rate*num_mailed,
+         profit=180*num_responded-1.6*num_mailed,
+         ave_profit=profit/num_mailed)
+intuit_wave2_res
+```
+
+
+So basically if we decide to send a email to all the customers who exceeds the break even rate of 4%, we get 9% response rate, and profit of $129,330(average profit of $15.7). We can lower the threashold(now it is 4%) and send broader customer base(our objective is to maximize profit not ROI).
