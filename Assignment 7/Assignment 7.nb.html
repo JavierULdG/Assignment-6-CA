@@ -1789,21 +1789,139 @@ $(document).ready(function () {
 <h3>Read in the data:</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyB1c2UgbG9hZChcImZpbGVuYW1lLlJkYXRhXCIpIGZvciAuUmRhdGEgZmlsZXNcblxuYGBgIn0= -->
-<pre class="r"><code># use load(&quot;filename.Rdata&quot;) for .Rdata files
-</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubG9hZChcIlBlbnRhdGhsb25UYXJnZXRpbmcuUmRhdGFcIilcblxucGVudCA8LSBwZW50ICU+JSBtdXRhdGUoYWdlPWZhY3RvcihhZ2UpLCBmZW1hbGU9ZmFjdG9yKGZlbWFsZSksIGJ1eWVyPWZhY3RvcihidXllcikpXG5cbiNOb3cgd2UgY3JlYXRlIHRoZSB0cmFpbmluZyBhbmQgdGVzdGluZyBzcGxpdFxuXG5wZW50LnRyYWluPC0gcGVudCU+JSBmaWx0ZXIodHJhaW5pbmc9PTEpXG5wZW50LnRlc3Q8LSBwZW50JT4lIGZpbHRlcih0cmFpbmluZz09MClcbmBgYCJ9 -->
+<pre class="r"><code>load(&quot;PentathlonTargeting.Rdata&quot;)
+
+pent &lt;- pent %&gt;% mutate(age=factor(age), female=factor(female), buyer=factor(buyer))
+
+#Now we create the training and testing split
+
+pent.train&lt;- pent%&gt;% filter(training==1)
+pent.test&lt;- pent%&gt;% filter(training==0)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
-</div>
-<div id="assignment-answers" class="section level1">
-<h1>Assignment answers</h1>
-<div id="question-1" class="section level2">
-<h2>Question 1</h2>
+<div id="part-1-analyising-the-different-offers" class="section level2">
+<h2>Part 1 Analyising the different offers</h2>
 <p>Type your answer text here, intervowen with blocks of R code</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBGaXJzdCAgd2UgY3JlYXRlIGEgbG9naXN0aWMgcmVncmVzc2lvbiBtb2RlbCBmb3IgZXZlcnkgdHlwZSBvZiBvZmZlciAoIGVuZHVyYW5jZSwgYmFja2NvdW50cnksIGV0YylcblxubHIuYmFja2NvdW50cnkgPC0gZ2xtKGJ1eWVyIH4gYWdlICsgZmVtYWxlICsgaW5jb21lICsgZWR1Y2F0aW9uICsgY2hpbGRyZW4rIGZyZXFfZW5kdXJhbmNlK2ZyZXFfc3RyZW5ndGgrZnJlcV93YXRlcitmcmVxX3RlYW0rZnJlcV9iYWNrY291bnRyeStmcmVxX3dpbnRlcitmcmVxX3JhY3F1ZXQsXG5mYW1pbHk9Ymlub21pYWwsIGRhdGE9cGVudC50cmFpbiAlPiUgZmlsdGVyKG1lc3NhZ2U9PVwiYmFja2NvdW50cnlcIikpXG5cbnBlbnQudGVzdCA8LSBwZW50LnRlc3QgJT4lXG5tdXRhdGUocHIuYmFja2NvdW50cnkgPSBwcmVkaWN0KGxyLmJhY2tjb3VudHJ5LCBuZXdkYXRhPXBlbnQudGVzdCwgdHlwZT1cInJlc3BvbnNlXCIpKVxuYGBgIn0= -->
+<pre class="r"><code># First  we create a logistic regression model for every type of offer ( endurance, backcountry, etc)
+
+lr.backcountry &lt;- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %&gt;% filter(message==&quot;backcountry&quot;))
+
+pent.test &lt;- pent.test %&gt;%
+mutate(pr.backcountry = predict(lr.backcountry, newdata=pent.test, type=&quot;response&quot;))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>And we repeat for every other message</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBFbmR1cmFuY2VcblxubHIuZW5kdXJhbmNlIDwtIGdsbShidXllciB+IGFnZSArIGZlbWFsZSArIGluY29tZSArIGVkdWNhdGlvbiArIGNoaWxkcmVuKyBmcmVxX2VuZHVyYW5jZStmcmVxX3N0cmVuZ3RoK2ZyZXFfd2F0ZXIrZnJlcV90ZWFtK2ZyZXFfYmFja2NvdW50cnkrZnJlcV93aW50ZXIrZnJlcV9yYWNxdWV0LFxuZmFtaWx5PWJpbm9taWFsLCBkYXRhPXBlbnQudHJhaW4gJT4lIGZpbHRlcihtZXNzYWdlPT1cImVuZHVyYW5jZVwiKSlcblxucGVudC50ZXN0IDwtIHBlbnQudGVzdCAlPiVcbm11dGF0ZShwci5lbmR1cmFuY2UgPSBwcmVkaWN0KGxyLmVuZHVyYW5jZSwgbmV3ZGF0YT1wZW50LnRlc3QsIHR5cGU9XCJyZXNwb25zZVwiKSlcbmBgYCJ9 -->
+<pre class="r"><code># Endurance
+
+lr.endurance &lt;- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %&gt;% filter(message==&quot;endurance&quot;))
+
+pent.test &lt;- pent.test %&gt;%
+mutate(pr.endurance = predict(lr.endurance, newdata=pent.test, type=&quot;response&quot;))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBTdHJlbmd0aFxuXG5sci5zdHJlbmd0aCA8LSBnbG0oYnV5ZXIgfiBhZ2UgKyBmZW1hbGUgKyBpbmNvbWUgKyBlZHVjYXRpb24gKyBjaGlsZHJlbisgZnJlcV9lbmR1cmFuY2UrZnJlcV9zdHJlbmd0aCtmcmVxX3dhdGVyK2ZyZXFfdGVhbStmcmVxX2JhY2tjb3VudHJ5K2ZyZXFfd2ludGVyK2ZyZXFfcmFjcXVldCxcbmZhbWlseT1iaW5vbWlhbCwgZGF0YT1wZW50LnRyYWluICU+JSBmaWx0ZXIobWVzc2FnZT09XCJzdHJlbmd0aFwiKSlcblxucGVudC50ZXN0IDwtIHBlbnQudGVzdCAlPiVcbm11dGF0ZShwci5lbmR1cmFuY2UgPSBwcmVkaWN0KGxyLnN0cmVuZ3RoLCBuZXdkYXRhPXBlbnQudGVzdCwgdHlwZT1cInJlc3BvbnNlXCIpKVxuYGBgIn0= -->
+<pre class="r"><code># Strength
+
+lr.strength &lt;- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %&gt;% filter(message==&quot;strength&quot;))
+
+pent.test &lt;- pent.test %&gt;%
+mutate(pr.endurance = predict(lr.strength, newdata=pent.test, type=&quot;response&quot;))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI1dhdGVyXG5cbmxyLndhdGVyIDwtIGdsbShidXllciB+IGFnZSArIGZlbWFsZSArIGluY29tZSArIGVkdWNhdGlvbiArIGNoaWxkcmVuKyBmcmVxX2VuZHVyYW5jZStmcmVxX3N0cmVuZ3RoK2ZyZXFfd2F0ZXIrZnJlcV90ZWFtK2ZyZXFfYmFja2NvdW50cnkrZnJlcV93aW50ZXIrZnJlcV9yYWNxdWV0LFxuZmFtaWx5PWJpbm9taWFsLCBkYXRhPXBlbnQudHJhaW4gJT4lIGZpbHRlcihtZXNzYWdlPT1cIndhdGVyXCIpKVxuXG5wZW50LnRlc3QgPC0gcGVudC50ZXN0ICU+JVxubXV0YXRlKHByLndhdGVyID0gcHJlZGljdChsci53YXRlciwgbmV3ZGF0YT1wZW50LnRlc3QsIHR5cGU9XCJyZXNwb25zZVwiKSlcbmBgYCJ9 -->
+<pre class="r"><code>#Water
+
+lr.water &lt;- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %&gt;% filter(message==&quot;water&quot;))
+
+pent.test &lt;- pent.test %&gt;%
+mutate(pr.water = predict(lr.water, newdata=pent.test, type=&quot;response&quot;))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI1RlYW1cblxubHIudGVhbSA8LSBnbG0oYnV5ZXIgfiBhZ2UgKyBmZW1hbGUgKyBpbmNvbWUgKyBlZHVjYXRpb24gKyBjaGlsZHJlbisgZnJlcV9lbmR1cmFuY2UrZnJlcV9zdHJlbmd0aCtmcmVxX3dhdGVyK2ZyZXFfdGVhbStmcmVxX2JhY2tjb3VudHJ5K2ZyZXFfd2ludGVyK2ZyZXFfcmFjcXVldCxcbmZhbWlseT1iaW5vbWlhbCwgZGF0YT1wZW50LnRyYWluICU+JSBmaWx0ZXIobWVzc2FnZT09XCJ0ZWFtXCIpKVxuXG5wZW50LnRlc3QgPC0gcGVudC50ZXN0ICU+JVxubXV0YXRlKHByLnRlYW0gPSBwcmVkaWN0KGxyLnRlYW0sIG5ld2RhdGE9cGVudC50ZXN0LCB0eXBlPVwicmVzcG9uc2VcIikpXG5gYGAifQ== -->
+<pre class="r"><code>#Team
+
+lr.team &lt;- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %&gt;% filter(message==&quot;team&quot;))
+
+pent.test &lt;- pent.test %&gt;%
+mutate(pr.team = predict(lr.team, newdata=pent.test, type=&quot;response&quot;))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI1dpbnRlclxuXG5sci53aW50ZXIgPC0gZ2xtKGJ1eWVyIH4gYWdlICsgZmVtYWxlICsgaW5jb21lICsgZWR1Y2F0aW9uICsgY2hpbGRyZW4rIGZyZXFfZW5kdXJhbmNlK2ZyZXFfc3RyZW5ndGgrZnJlcV93YXRlcitmcmVxX3RlYW0rZnJlcV9iYWNrY291bnRyeStmcmVxX3dpbnRlcitmcmVxX3JhY3F1ZXQsXG5mYW1pbHk9Ymlub21pYWwsIGRhdGE9cGVudC50cmFpbiAlPiUgZmlsdGVyKG1lc3NhZ2U9PVwid2ludGVyXCIpKVxuXG5wZW50LnRlc3QgPC0gcGVudC50ZXN0ICU+JVxubXV0YXRlKHByLndpbnRlciA9IHByZWRpY3QobHIud2ludGVyLCBuZXdkYXRhPXBlbnQudGVzdCwgdHlwZT1cInJlc3BvbnNlXCIpKVxuYGBgIn0= -->
+<pre class="r"><code>#Winter
+
+lr.winter &lt;- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %&gt;% filter(message==&quot;winter&quot;))
+
+pent.test &lt;- pent.test %&gt;%
+mutate(pr.winter = predict(lr.winter, newdata=pent.test, type=&quot;response&quot;))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI1dpbnRlclxuXG5sci5yYWNxdWV0IDwtIGdsbShidXllciB+IGFnZSArIGZlbWFsZSArIGluY29tZSArIGVkdWNhdGlvbiArIGNoaWxkcmVuKyBmcmVxX2VuZHVyYW5jZStmcmVxX3N0cmVuZ3RoK2ZyZXFfd2F0ZXIrZnJlcV90ZWFtK2ZyZXFfYmFja2NvdW50cnkrZnJlcV93aW50ZXIrZnJlcV9yYWNxdWV0LFxuZmFtaWx5PWJpbm9taWFsLCBkYXRhPXBlbnQudHJhaW4gJT4lIGZpbHRlcihtZXNzYWdlPT1cInJhY3F1ZXRcIikpXG5cbnBlbnQudGVzdCA8LSBwZW50LnRlc3QgJT4lXG5tdXRhdGUocHIucmFjcXVldCA9IHByZWRpY3QobHIucmFjcXVldCwgbmV3ZGF0YT1wZW50LnRlc3QsIHR5cGU9XCJyZXNwb25zZVwiKSlcbmBgYCJ9 -->
+<pre class="r"><code>#Winter
+
+lr.racquet &lt;- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %&gt;% filter(message==&quot;racquet&quot;))
+
+pent.test &lt;- pent.test %&gt;%
+mutate(pr.racquet = predict(lr.racquet, newdata=pent.test, type=&quot;response&quot;))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5wZW50LnRlc3Q8LSBwZW50LnRlc3QgJT4lXG4gICBtdXRhdGUocHIubWF4ID0gcG1heChwci5iYWNrY291bnRyeSwgcHIuZW5kdXJhbmNlLCBwci53YXRlciwgcHIudGVhbSwgcHIud2ludGVyLCBwci5yYWNxdWV0KSxcbiAgICAgICAgICBtYWlsLm9mZmVyPWNhc2Vfd2hlbihcbiAgICAgICAgICAgICBwci5iYWNrY291bnRyeT09cHIubWF4IH4gXCJCYWNrY291bnRyeVwiLFxuICAgICAgICAgICAgIHByLmVuZHVyYW5jZT09cHIubWF4fiBcIkVuZHVyYW5jZVwiLFxuICAgICAgICAgICAgIHByLndhdGVyPT1wci5tYXh+IFwiV2F0ZXJcIixcbiAgICAgICAgICAgICBwci50ZWFtPT1wci5tYXggfiBcIlRlYW1cIixcbiAgICAgICAgICAgICBwci53aW50ZXI9PXByLm1heH4gXCJXaW50ZXJcIixcbiAgICAgICAgICAgICBwci5yYWNxdWV0PT1wci5tYXggfiBcIlJhY3F1ZXRcIikpXG5cbnBlbnQudGVzdCU+JSB0YWJ5bChtYWlsLm9mZmVyIClcbmBgYCJ9 -->
+<pre class="r"><code>
+pent.test&lt;- pent.test %&gt;%
+   mutate(pr.max = pmax(pr.backcountry, pr.endurance, pr.water, pr.team, pr.winter, pr.racquet),
+          mail.offer=case_when(
+             pr.backcountry==pr.max ~ &quot;Backcountry&quot;,
+             pr.endurance==pr.max~ &quot;Endurance&quot;,
+             pr.water==pr.max~ &quot;Water&quot;,
+             pr.team==pr.max ~ &quot;Team&quot;,
+             pr.winter==pr.max~ &quot;Winter&quot;,
+             pr.racquet==pr.max ~ &quot;Racquet&quot;))
+
+pent.test%&gt;% tabyl(mail.offer )</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiICBtYWlsLm9mZmVyICAgICBuICAgICBwZXJjZW50XG4gQmFja2NvdW50cnkgIDg5MjYgMC4wNDk1ODg4ODlcbiAgIEVuZHVyYW5jZSA5NTgwNCAwLjUzMjI0NDQ0NFxuICAgICBSYWNxdWV0ICA3MzA4IDAuMDQwNjAwMDAwXG4gICAgICAgIFRlYW0gMjgzODggMC4xNTc3MTExMTFcbiAgICAgICBXYXRlciAzOTIwMiAwLjIxNzc4ODg4OVxuICAgICAgV2ludGVyICAgMzcyIDAuMDAyMDY2NjY3XG4ifQ== -->
+<pre><code>  mail.offer     n     percent
+ Backcountry  8926 0.049588889
+   Endurance 95804 0.532244444
+     Racquet  7308 0.040600000
+        Team 28388 0.157711111
+       Water 39202 0.217788889
+      Winter   372 0.002066667</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
@@ -1818,7 +1936,7 @@ $(document).ready(function () {
 </div>
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlBlbnRhdGhsb24gKFBhcnQgSUlJKSIgICAgICAjIFJlcGxhY2Ugd2l0aCBuYW1lIG9mIGFzc2lnbm1lbnQNCmF1dGhvcjogDQogICAtIG5hbWU6IFNlY3Rpb24gMzIgICAgICAgIA0KICAgLSBuYW1lOiBBaHNhbiBLYW1yYW4NCiAgIC0gbmFtZTogVG9zaGkgTXVyYWthbWkNCiAgIC0gbmFtZTogSmF2aWVyIFVyYmluYSAgICAgDQpvdXRwdXQ6DQogIGh0bWxfbm90ZWJvb2s6IGRlZmF1bHQNCi0tLQ0KDQojIFByZWxpbWluYXJpZXMNCg0KIyMjIERldGVybWluZSBub3RlYm9vayBkZWZhdWx0czoNCmBgYHtyLCBpbmNsdWRlPUZBTFNFfQ0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KGVjaG89VFJVRSwgICAgICAjIFByaW50IGFsbCB0aGUgY29kZSBpbiBhbGwgdGhlIGNodW5rcw0KICAgICAgICAgICAgICAgICAgICAgIHdhcm5pbmc9RkFMU0UsICAjIERvbid0IHByaW50IHdhcm5pbmcgc3RhdGVtZW50cw0KICAgICAgICAgICAgICAgICAgICAgIG1lc3NhZ2U9RkFMU0UsICAjIERvbid0IHByaW50IG90aGVyIFIgb3V0cHV0IG1lc3NhZ2VzDQogICAgICAgICAgICAgICAgICAgICAgY29tbWVudD1OQSkgICAgICMgSGVscHMgcHJvZHVjZSBwcmV0dGllciBvdXRwdXQNCmBgYA0KDQojIyMgTG9hZCBwYWNrYWdlczoNCmBgYHtyLCBlY2hvPUZBTFNFLCBtZXNzYWdlID0gRkFMU0UsIHdhcm5pbmcgPSBGQUxTRX0NCmxpYnJhcnkoZ21vZGVscykNCmxpYnJhcnkobW9kZWxyKQ0KbGlicmFyeShqYW5pdG9yKQ0KbGlicmFyeShoYXZlbikNCmxpYnJhcnkocmVhZHhsKQ0KbGlicmFyeShrbml0cikNCmxpYnJhcnkocHN5Y2gpDQpsaWJyYXJ5KHN0YXRhcikNCmxpYnJhcnkodGlkeXZlcnNlKQ0KYGBgDQoNCiMjIyBSZWFkIGluIHRoZSBkYXRhOg0KYGBge3J9DQojIHVzZSBsb2FkKCJmaWxlbmFtZS5SZGF0YSIpIGZvciAuUmRhdGEgZmlsZXMNCg0KYGBgDQoNCiMgQXNzaWdubWVudCBhbnN3ZXJzDQoNCiMjIFF1ZXN0aW9uIDENCg0KVHlwZSB5b3VyIGFuc3dlciB0ZXh0IGhlcmUsIGludGVydm93ZW4gd2l0aCBibG9ja3Mgb2YgUiBjb2RlDQoNCmBgYHtyfQ0KDQpgYGANCg0KIyMgUXVlc3Rpb24gMg0KDQpUeXBlIHlvdXIgYW5zd2VyIHRleHQgaGVyZSwgaW50ZXJ2b3dlbiB3aXRoIGJsb2NrcyBvZiBSIGNvZGUNCg0KDQpgYGB7cn0NCg0KYGBgDQoNCg==</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlBlbnRhdGhsb24gKFBhcnQgSUlJKSIgICAgICAjIFJlcGxhY2Ugd2l0aCBuYW1lIG9mIGFzc2lnbm1lbnQNCmF1dGhvcjogDQogICAtIG5hbWU6IFNlY3Rpb24gMzIgICAgICAgIA0KICAgLSBuYW1lOiBBaHNhbiBLYW1yYW4NCiAgIC0gbmFtZTogVG9zaGkgTXVyYWthbWkNCiAgIC0gbmFtZTogSmF2aWVyIFVyYmluYSAgICAgDQpvdXRwdXQ6DQogIGh0bWxfbm90ZWJvb2s6IGRlZmF1bHQNCi0tLQ0KDQojIFByZWxpbWluYXJpZXMNCg0KIyMjIERldGVybWluZSBub3RlYm9vayBkZWZhdWx0czoNCmBgYHtyLCBpbmNsdWRlPUZBTFNFfQ0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KGVjaG89VFJVRSwgICAgICAjIFByaW50IGFsbCB0aGUgY29kZSBpbiBhbGwgdGhlIGNodW5rcw0KICAgICAgICAgICAgICAgICAgICAgIHdhcm5pbmc9RkFMU0UsICAjIERvbid0IHByaW50IHdhcm5pbmcgc3RhdGVtZW50cw0KICAgICAgICAgICAgICAgICAgICAgIG1lc3NhZ2U9RkFMU0UsICAjIERvbid0IHByaW50IG90aGVyIFIgb3V0cHV0IG1lc3NhZ2VzDQogICAgICAgICAgICAgICAgICAgICAgY29tbWVudD1OQSkgICAgICMgSGVscHMgcHJvZHVjZSBwcmV0dGllciBvdXRwdXQNCmBgYA0KDQojIyMgTG9hZCBwYWNrYWdlczoNCmBgYHtyLCBlY2hvPUZBTFNFLCBtZXNzYWdlID0gRkFMU0UsIHdhcm5pbmcgPSBGQUxTRX0NCmxpYnJhcnkoZ21vZGVscykNCmxpYnJhcnkobW9kZWxyKQ0KbGlicmFyeShqYW5pdG9yKQ0KbGlicmFyeShoYXZlbikNCmxpYnJhcnkocmVhZHhsKQ0KbGlicmFyeShrbml0cikNCmxpYnJhcnkocHN5Y2gpDQpsaWJyYXJ5KHN0YXRhcikNCmxpYnJhcnkodGlkeXZlcnNlKQ0KYGBgDQoNCiMjIyBSZWFkIGluIHRoZSBkYXRhOg0KYGBge3J9DQpsb2FkKCJQZW50YXRobG9uVGFyZ2V0aW5nLlJkYXRhIikNCg0KcGVudCA8LSBwZW50ICU+JSBtdXRhdGUoYWdlPWZhY3RvcihhZ2UpLCBmZW1hbGU9ZmFjdG9yKGZlbWFsZSksIGJ1eWVyPWZhY3RvcihidXllcikpDQoNCiNOb3cgd2UgY3JlYXRlIHRoZSB0cmFpbmluZyBhbmQgdGVzdGluZyBzcGxpdA0KDQpwZW50LnRyYWluPC0gcGVudCU+JSBmaWx0ZXIodHJhaW5pbmc9PTEpDQpwZW50LnRlc3Q8LSBwZW50JT4lIGZpbHRlcih0cmFpbmluZz09MCkNCmBgYA0KDQojIyBQYXJ0IDEgQW5hbHlpc2luZyB0aGUgZGlmZmVyZW50IG9mZmVycw0KDQpUeXBlIHlvdXIgYW5zd2VyIHRleHQgaGVyZSwgaW50ZXJ2b3dlbiB3aXRoIGJsb2NrcyBvZiBSIGNvZGUNCg0KYGBge3J9DQojIEZpcnN0ICB3ZSBjcmVhdGUgYSBsb2dpc3RpYyByZWdyZXNzaW9uIG1vZGVsIGZvciBldmVyeSB0eXBlIG9mIG9mZmVyICggZW5kdXJhbmNlLCBiYWNrY291bnRyeSwgZXRjKQ0KDQpsci5iYWNrY291bnRyeSA8LSBnbG0oYnV5ZXIgfiBhZ2UgKyBmZW1hbGUgKyBpbmNvbWUgKyBlZHVjYXRpb24gKyBjaGlsZHJlbisgZnJlcV9lbmR1cmFuY2UrZnJlcV9zdHJlbmd0aCtmcmVxX3dhdGVyK2ZyZXFfdGVhbStmcmVxX2JhY2tjb3VudHJ5K2ZyZXFfd2ludGVyK2ZyZXFfcmFjcXVldCwNCmZhbWlseT1iaW5vbWlhbCwgZGF0YT1wZW50LnRyYWluICU+JSBmaWx0ZXIobWVzc2FnZT09ImJhY2tjb3VudHJ5IikpDQoNCnBlbnQudGVzdCA8LSBwZW50LnRlc3QgJT4lDQptdXRhdGUocHIuYmFja2NvdW50cnkgPSBwcmVkaWN0KGxyLmJhY2tjb3VudHJ5LCBuZXdkYXRhPXBlbnQudGVzdCwgdHlwZT0icmVzcG9uc2UiKSkNCmBgYA0KDQoNCkFuZCB3ZSByZXBlYXQgZm9yIGV2ZXJ5IG90aGVyIG1lc3NhZ2UNCg0KYGBge3J9DQojIEVuZHVyYW5jZQ0KDQpsci5lbmR1cmFuY2UgPC0gZ2xtKGJ1eWVyIH4gYWdlICsgZmVtYWxlICsgaW5jb21lICsgZWR1Y2F0aW9uICsgY2hpbGRyZW4rIGZyZXFfZW5kdXJhbmNlK2ZyZXFfc3RyZW5ndGgrZnJlcV93YXRlcitmcmVxX3RlYW0rZnJlcV9iYWNrY291bnRyeStmcmVxX3dpbnRlcitmcmVxX3JhY3F1ZXQsDQpmYW1pbHk9Ymlub21pYWwsIGRhdGE9cGVudC50cmFpbiAlPiUgZmlsdGVyKG1lc3NhZ2U9PSJlbmR1cmFuY2UiKSkNCg0KcGVudC50ZXN0IDwtIHBlbnQudGVzdCAlPiUNCm11dGF0ZShwci5lbmR1cmFuY2UgPSBwcmVkaWN0KGxyLmVuZHVyYW5jZSwgbmV3ZGF0YT1wZW50LnRlc3QsIHR5cGU9InJlc3BvbnNlIikpDQpgYGANCg0KDQoNCmBgYHtyfQ0KIyBTdHJlbmd0aA0KDQpsci5zdHJlbmd0aCA8LSBnbG0oYnV5ZXIgfiBhZ2UgKyBmZW1hbGUgKyBpbmNvbWUgKyBlZHVjYXRpb24gKyBjaGlsZHJlbisgZnJlcV9lbmR1cmFuY2UrZnJlcV9zdHJlbmd0aCtmcmVxX3dhdGVyK2ZyZXFfdGVhbStmcmVxX2JhY2tjb3VudHJ5K2ZyZXFfd2ludGVyK2ZyZXFfcmFjcXVldCwNCmZhbWlseT1iaW5vbWlhbCwgZGF0YT1wZW50LnRyYWluICU+JSBmaWx0ZXIobWVzc2FnZT09InN0cmVuZ3RoIikpDQoNCnBlbnQudGVzdCA8LSBwZW50LnRlc3QgJT4lDQptdXRhdGUocHIuZW5kdXJhbmNlID0gcHJlZGljdChsci5zdHJlbmd0aCwgbmV3ZGF0YT1wZW50LnRlc3QsIHR5cGU9InJlc3BvbnNlIikpDQpgYGANCg0KYGBge3J9DQojV2F0ZXINCg0KbHIud2F0ZXIgPC0gZ2xtKGJ1eWVyIH4gYWdlICsgZmVtYWxlICsgaW5jb21lICsgZWR1Y2F0aW9uICsgY2hpbGRyZW4rIGZyZXFfZW5kdXJhbmNlK2ZyZXFfc3RyZW5ndGgrZnJlcV93YXRlcitmcmVxX3RlYW0rZnJlcV9iYWNrY291bnRyeStmcmVxX3dpbnRlcitmcmVxX3JhY3F1ZXQsDQpmYW1pbHk9Ymlub21pYWwsIGRhdGE9cGVudC50cmFpbiAlPiUgZmlsdGVyKG1lc3NhZ2U9PSJ3YXRlciIpKQ0KDQpwZW50LnRlc3QgPC0gcGVudC50ZXN0ICU+JQ0KbXV0YXRlKHByLndhdGVyID0gcHJlZGljdChsci53YXRlciwgbmV3ZGF0YT1wZW50LnRlc3QsIHR5cGU9InJlc3BvbnNlIikpDQpgYGANCg0KYGBge3J9DQojVGVhbQ0KDQpsci50ZWFtIDwtIGdsbShidXllciB+IGFnZSArIGZlbWFsZSArIGluY29tZSArIGVkdWNhdGlvbiArIGNoaWxkcmVuKyBmcmVxX2VuZHVyYW5jZStmcmVxX3N0cmVuZ3RoK2ZyZXFfd2F0ZXIrZnJlcV90ZWFtK2ZyZXFfYmFja2NvdW50cnkrZnJlcV93aW50ZXIrZnJlcV9yYWNxdWV0LA0KZmFtaWx5PWJpbm9taWFsLCBkYXRhPXBlbnQudHJhaW4gJT4lIGZpbHRlcihtZXNzYWdlPT0idGVhbSIpKQ0KDQpwZW50LnRlc3QgPC0gcGVudC50ZXN0ICU+JQ0KbXV0YXRlKHByLnRlYW0gPSBwcmVkaWN0KGxyLnRlYW0sIG5ld2RhdGE9cGVudC50ZXN0LCB0eXBlPSJyZXNwb25zZSIpKQ0KYGBgDQoNCmBgYHtyfQ0KI1dpbnRlcg0KDQpsci53aW50ZXIgPC0gZ2xtKGJ1eWVyIH4gYWdlICsgZmVtYWxlICsgaW5jb21lICsgZWR1Y2F0aW9uICsgY2hpbGRyZW4rIGZyZXFfZW5kdXJhbmNlK2ZyZXFfc3RyZW5ndGgrZnJlcV93YXRlcitmcmVxX3RlYW0rZnJlcV9iYWNrY291bnRyeStmcmVxX3dpbnRlcitmcmVxX3JhY3F1ZXQsDQpmYW1pbHk9Ymlub21pYWwsIGRhdGE9cGVudC50cmFpbiAlPiUgZmlsdGVyKG1lc3NhZ2U9PSJ3aW50ZXIiKSkNCg0KcGVudC50ZXN0IDwtIHBlbnQudGVzdCAlPiUNCm11dGF0ZShwci53aW50ZXIgPSBwcmVkaWN0KGxyLndpbnRlciwgbmV3ZGF0YT1wZW50LnRlc3QsIHR5cGU9InJlc3BvbnNlIikpDQpgYGANCg0KYGBge3J9DQojV2ludGVyDQoNCmxyLnJhY3F1ZXQgPC0gZ2xtKGJ1eWVyIH4gYWdlICsgZmVtYWxlICsgaW5jb21lICsgZWR1Y2F0aW9uICsgY2hpbGRyZW4rIGZyZXFfZW5kdXJhbmNlK2ZyZXFfc3RyZW5ndGgrZnJlcV93YXRlcitmcmVxX3RlYW0rZnJlcV9iYWNrY291bnRyeStmcmVxX3dpbnRlcitmcmVxX3JhY3F1ZXQsDQpmYW1pbHk9Ymlub21pYWwsIGRhdGE9cGVudC50cmFpbiAlPiUgZmlsdGVyKG1lc3NhZ2U9PSJyYWNxdWV0IikpDQoNCnBlbnQudGVzdCA8LSBwZW50LnRlc3QgJT4lDQptdXRhdGUocHIucmFjcXVldCA9IHByZWRpY3QobHIucmFjcXVldCwgbmV3ZGF0YT1wZW50LnRlc3QsIHR5cGU9InJlc3BvbnNlIikpDQpgYGANCg0KDQoNCmBgYHtyfQ0KDQpwZW50LnRlc3Q8LSBwZW50LnRlc3QgJT4lDQogICBtdXRhdGUocHIubWF4ID0gcG1heChwci5iYWNrY291bnRyeSwgcHIuZW5kdXJhbmNlLCBwci53YXRlciwgcHIudGVhbSwgcHIud2ludGVyLCBwci5yYWNxdWV0KSwNCiAgICAgICAgICBtYWlsLm9mZmVyPWNhc2Vfd2hlbigNCiAgICAgICAgICAgICBwci5iYWNrY291bnRyeT09cHIubWF4IH4gIkJhY2tjb3VudHJ5IiwNCiAgICAgICAgICAgICBwci5lbmR1cmFuY2U9PXByLm1heH4gIkVuZHVyYW5jZSIsDQogICAgICAgICAgICAgcHIud2F0ZXI9PXByLm1heH4gIldhdGVyIiwNCiAgICAgICAgICAgICBwci50ZWFtPT1wci5tYXggfiAiVGVhbSIsDQogICAgICAgICAgICAgcHIud2ludGVyPT1wci5tYXh+ICJXaW50ZXIiLA0KICAgICAgICAgICAgIHByLnJhY3F1ZXQ9PXByLm1heCB+ICJSYWNxdWV0IikpDQoNCnBlbnQudGVzdCU+JSB0YWJ5bChtYWlsLm9mZmVyICkNCg0KDQpgYGANCg0KIyMgUXVlc3Rpb24gMg0KDQpUeXBlIHlvdXIgYW5zd2VyIHRleHQgaGVyZSwgaW50ZXJ2b3dlbiB3aXRoIGJsb2NrcyBvZiBSIGNvZGUNCg0KDQpgYGB7cn0NCg0KYGBgDQoNCg==</div>
 
 
 

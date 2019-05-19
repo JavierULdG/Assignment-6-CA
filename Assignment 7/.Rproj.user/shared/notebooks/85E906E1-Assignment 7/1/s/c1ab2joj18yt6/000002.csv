@@ -1,0 +1,7 @@
+"0","#Winter"
+"0",""
+"0","lr.racquet <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,"
+"0","family=binomial, data=pent.train %>% filter(message==""racquet""))"
+"0",""
+"0","pent.test <- pent.test %>%"
+"0","mutate(pr.racquet = predict(lr.racquet, newdata=pent.test, type=""response""))"

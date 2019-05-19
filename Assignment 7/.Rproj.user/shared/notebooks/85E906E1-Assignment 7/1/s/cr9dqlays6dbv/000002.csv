@@ -1,0 +1,8 @@
+"0","load(""PentathlonTargeting.Rdata"")"
+"0",""
+"0","pent <- pent %>% mutate(age=factor(age), female=factor(female), buyer=factor(buyer))"
+"0",""
+"0","#Now we create the training and testing split"
+"0",""
+"0","pent.train<- pent%>% filter(training==1)"
+"0","pent.test<- pent%>% filter(training==0)"

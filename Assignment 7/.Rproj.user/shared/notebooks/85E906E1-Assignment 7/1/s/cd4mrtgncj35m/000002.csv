@@ -1,0 +1,7 @@
+"0","# First  we create a logistic regression model for every type of offer ( endurance, backcountry, etc)"
+"0",""
+"0","lr.backcountry <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,"
+"0","family=binomial, data=pent.train %>% filter(message==""backcountry""))"
+"0",""
+"0","pent.test <- pent.test %>%"
+"0","mutate(pr.backcountry = predict(lr.backcountry, newdata=pent.test, type=""response""))"
