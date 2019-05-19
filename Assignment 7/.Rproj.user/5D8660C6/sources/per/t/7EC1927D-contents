@@ -1,0 +1,196 @@
+---
+title: "Intuit Online"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(encoding = "utf-8")
+
+```
+
+#Intuit Online Case
+ This is a group assignment for MKTG482. 
+ Group member: Javier Urbina, Ahsan Kamran, Toshi Murakami
+ 
+##Load data and library
+```{r}
+library(tidyverse)
+library(mktg482)
+library(nnet)
+
+rm(list=ls())
+set.seed(13579)
+load("intuit_online.Rdata")
+```
+
+
+##Split Data into test and training
+
+```{r}
+intuit_training <- intuit %>% filter(training==1)
+intuit_test<-intuit %>% filter(training==0)
+```
+
+##Neural Network 
+
+```{r}
+intuit_nn5 <- nnet(res~speeddown+speedup+last+numords+dollars+sincepurch+version2013+upgraded+payroll+bizflag+sex+income+medhvalue,data=intuit_training, size=5, decay=0.01, maxit=1000)
+
+intuit_nn10 <- nnet(res~speeddown+speedup+last+numords+dollars+sincepurch+version2013+upgraded+payroll+bizflag+sex+income+medhvalue,data=intuit_training, size=10, decay=0.01, maxit=1000)
+
+```
+
+
+```{r}
+pred_nn5_training<- predict(intuit_nn5,type="raw")
+pred_nn5_test<- predict(intuit_nn5,newdata = intuit_test,type="raw")
+
+
+pred_nn10_training<- predict(intuit_nn10,type="raw")
+pred_nn10_test<- predict(intuit_nn10,newdata = intuit_test,type="raw")
+
+```
+
+
+##Logistic Regression
+
+```{r}
+intuit_lr<-glm(res~speeddown+speedup+last+numords+dollars+sincepurch+version2013+upgraded+payroll+bizflag+sex+income+medhvalue,family=binomial, data=intuit_training)
+
+pred_lr_training<-predict(intuit_lr, type="response")
+pred_lr_test<-predict(intuit_lr,newdata=intuit_test ,type="response")
+```
+
+##Model Performance comparison
+
+```{r}
+gainsplot(pred_nn5_test,pred_nn10_test,pred_lr_test, label.var =intuit_test$res )
+gainsplot(pred_nn5_training,pred_nn10_training,pred_lr_training, label.var =intuit_training$res )
+```
+
+
+
+Assign NN result to Wave2 data.
+```{r}
+pred_nn5_wave2<- intuit.wave2 %>% 
+  mutate(pred_wave2=predict(intuit_nn5,newdata = intuit.wave2,type="raw"))
+```
+
+##Calculate break even rate
+
+ Cost/target : $1.60
+ Target Profit : $5.6
+ Break Even Response rate is described as 7.2/180 = 4%
+
+```{r}
+BER=7.2/180
+BER
+```
+
+##Set target customers
+For the customers in the dataset, create a new variable with a value of 1 if the customers predicted probability is greater than or equal to the breakeven response rate(4%) and 0 otherwise.
+```{r}
+options(encoding = "utf-8")
+
+intuit.wave2<-pred_nn5_wave2 %>%
+  mutate(target=1*(pred_wave2>= .009))
+```
+
+
+```{r}
+intuit.wave2 %>% 
+  group_by(target) %>% 
+  summarise(num_target=n(), perc_target=num_target/25000, response_rate=mean(pred_wave2)) 
+```
+
+Of all the customer base, 57.9% of the customer are the target and response rate is 6.5%
+
+##Profitability analysis for Neural Network
+```{r}
+intuit_wave2_res<- intuit.wave2%>% 
+  filter(target==1) %>% 
+  summarise(frac_mailed=n()/25000, resp_rate=mean(pred_wave2)) %>% 
+  mutate(num_mailed=25000*frac_mailed,
+         num_responded=resp_rate*num_mailed,
+         profit=180*num_responded-1.6*num_mailed,
+         ave_profit=profit/num_mailed)
+intuit_wave2_res
+```
+
+
+
+```{r}
+i<-0
+max_profit<-0
+max_i<-0
+ave_profit<-0
+while ( i<1 ){
+  i<-i+0.001
+  
+intuit.wave2<-pred_nn5_wave2 %>%
+  mutate(target=1*(pred_wave2>= i))
+
+intuit.wave2 %>% 
+  group_by(target) %>% 
+  summarise(num_target=n(), perc_target=num_target/25000, response_rate=mean(pred_wave2)) 
+
+intuit_wave2_res<- intuit.wave2%>% 
+  filter(target==1) %>% 
+  summarise(frac_mailed=n()/25000, resp_rate=mean(pred_wave2)) %>% 
+  mutate(num_mailed=25000*frac_mailed,
+         num_responded=resp_rate*num_mailed,
+         profit=180*num_responded-1.6*num_mailed,
+         ave_profit<-profit/num_mailed)
+
+if(ave_profit>max_profit){
+  max_profit<-ave_profit
+  max_i=i
+  }
+}
+max_profit
+max_i
+
+```
+
+
+```{r}
+#create dataset for submit
+intuit_wave2_submit <- intuit.wave2 %>% 
+  mutate(id=id, best.score=pred_wave2, target.wave2=target, group="Javier_Ahsan_Toshi",section=32)%>%
+  select(id,best.score,target.wave2,group,section)
+
+saveRDS(intuit_wave2_submit,"Javier_Ahsan_Toshi.RDS")
+
+```
+
+## Write-Up
+
+## Q1 What is your final predictive model, how did you choose it, and what is its expected predictive performance (in terms of AUC, gains, etc.)? 
+
+We created three models, Neural Network with 5 layers, Neural Network with 10 layers and Logisitic Regression.  
+We selected Neural Network with 5 layers due to a high AUC without overfitting and a comparable gains plot to  
+Neural Network with 10 layers.
+  Model                         AUC(training)  AUC(test)
+Neural Network with 5 layers  0.833            0.827
+Neural Network with 10 layers 0.850            0.830
+Logisitic Regression          0.744            0.755
+
+## Q2 How did you decide who should receive the wave 2 offer?
+We initially determined break-even rate of 4% as a threashold to determine target.  
+But then we realized that selecting customers whose potential response rate are above 4% will make overall response rate above 4%.  
+As profit maximization was the goal, we used some brute-force scenario analysis and we can get higest profit targeting those with prediction levels > 0.9%. 
+
+##Q3.How much profit (both total and per targeted customer) should Lucy expect with her
+wave 2 offer?
+Lucy can expect to send the offer to a mailing list of 14,880 (57.9% of 25,000), and receive cumulative profit of $146,124 and per customer profit of $10.1.
+
+##Q4.What did you learn about what predicts whether consumers are likely to upgrade?
+```{r}
+library(sjPlot)
+plot_model(intuit_lr)
+```
+
+

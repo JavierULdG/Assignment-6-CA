@@ -1,0 +1,59 @@
+---
+title: "Pentathlon (Part III)"      # Replace with name of assignment
+author: 
+   - name: Section 32        
+   - name: Ahsan Kamran
+   - name: Toshi Murakami
+   - name: Javier Urbina     
+output:
+  html_notebook: default
+---
+
+# Preliminaries
+
+### Determine notebook defaults:
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE,      # Print all the code in all the chunks
+                      warning=FALSE,  # Don't print warning statements
+                      message=FALSE,  # Don't print other R output messages
+                      comment=NA)     # Helps produce prettier output
+```
+
+### Load packages:
+```{r, echo=FALSE, message = FALSE, warning = FALSE}
+library(gmodels)
+library(modelr)
+library(janitor)
+library(haven)
+library(readxl)
+library(knitr)
+library(psych)
+library(statar)
+library(tidyverse)
+```
+
+### Read in the data:
+```{r}
+# use load("filename.Rdata") for .Rdata files
+
+```
+
+# Assignment answers
+
+## Question 1
+
+Type your answer text here, intervowen with blocks of R code
+
+```{r}
+
+```
+
+## Question 2
+
+Type your answer text here, intervowen with blocks of R code
+
+
+```{r}
+
+```
+
