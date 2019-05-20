@@ -123,8 +123,7 @@ pent.test <- pent.test %>%
 mutate(pr.racquet = predict(lr.racquet, newdata=pent.test, type="response"))
 ```
 
-
-
+## Question 2
 ```{r}
 
 pent.test<- pent.test %>%
@@ -142,12 +141,32 @@ pent.test%>% tabyl(mail.offer )
 
 ```
 
-## Question 2
+## Question 3
 
 Type your answer text here, intervowen with blocks of R code
 
 
 ```{r}
+pent.test <- pent.test %>%
+  mutate(ep.backcountry=pr.backcountry*total_os*0.4, ep.endurance=pr.endurance*total_os*0.4, ep.racquet=pr.racquet*total_os*0.4, ep.team=pr.team*total_os*0.4, ep.water=pr.water*total_os*0.4, ep.winter=pr.winter*total_os*.4)
+
+pent.test<- pent.test %>%
+   mutate(ep.max = pmax(ep.backcountry, ep.endurance, ep.water, ep.team, ep.winter, ep.racquet),
+          mail.offer.ep=case_when(
+             ep.backcountry==ep.max ~ "Backcountry",
+             ep.endurance==ep.max~ "Endurance",
+             ep.water==ep.max~ "Water",
+             ep.team==ep.max ~ "Team",
+             ep.winter==ep.max~ "Winter",
+             ep.racquet==ep.max ~ "Racquet"))
+
+pent.test%>% tabyl(mail.offer.ep )
+
+
+
+
+
+
 
 ```
 
