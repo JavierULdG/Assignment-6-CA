@@ -80,7 +80,7 @@ lr.strength <- glm(buyer ~ age + female + income + education + children+ freq_en
 family=binomial, data=pent.train %>% filter(message=="strength"))
 
 pent.test <- pent.test %>%
-mutate(pr.endurance = predict(lr.strength, newdata=pent.test, type="response"))
+mutate(pr.strength = predict(lr.strength, newdata=pent.test, type="response"))
 ```
 
 ```{r}
@@ -114,7 +114,7 @@ mutate(pr.winter = predict(lr.winter, newdata=pent.test, type="response"))
 ```
 
 ```{r}
-#Winter
+#Racquet
 
 lr.racquet <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
 family=binomial, data=pent.train %>% filter(message=="racquet"))
@@ -127,14 +127,15 @@ mutate(pr.racquet = predict(lr.racquet, newdata=pent.test, type="response"))
 ```{r}
 
 pent.test<- pent.test %>%
-   mutate(pr.max = pmax(pr.backcountry, pr.endurance, pr.water, pr.team, pr.winter, pr.racquet),
+   mutate(pr.max = pmax(pr.backcountry, pr.endurance, pr.water, pr.team, pr.winter, pr.racquet,pr.strength),
           mail.offer=case_when(
              pr.backcountry==pr.max ~ "Backcountry",
              pr.endurance==pr.max~ "Endurance",
              pr.water==pr.max~ "Water",
              pr.team==pr.max ~ "Team",
              pr.winter==pr.max~ "Winter",
-             pr.racquet==pr.max ~ "Racquet"))
+             pr.racquet==pr.max ~ "Racquet",
+             pr.strength==pr.max~"Strength"))
 
 pent.test%>% tabyl(mail.offer )
 
@@ -147,26 +148,113 @@ Type your answer text here, intervowen with blocks of R code
 
 
 ```{r}
+
+
+pent.test %>% filter(buyer==1) %>% 
+  group_by(message) %>% 
+   summarise(avg_os_backcountry= mean(backcountry_os), 
+             avg_os_endurance=mean(endurance_os), 
+             avg_os_racquet=mean(racquet_os), 
+             avg_os_team=mean(team_os),
+             avg_os_water=mean(water_os),
+             avg_os_winter=mean(winter_os),
+             avg_os_strength=mean(strength_os),
+             avg_os_sum=avg_os_strength+avg_os_winter+avg_os_water+avg_os_team+avg_os_racquet+avg_os_backcountry+avg_os_endurance,
+             avg_total=mean(total_os))
+#calculate bucket size for each of message. Bucket size for endurance 56.13240 / strength 56.46285 /team...
+
+
+pent.test<- pent.test %>% 
+  mutate(bucket_endurance=56.13240, 
+         bucket_strength=56.46285,
+         bucket_water=65.00817,
+         bucket_team=60.43344,
+         bucket_backcountry=61.62745, 
+         bucket_winter=57.28686,
+         bucket_racquet=57.58275)
+
 pent.test <- pent.test %>%
-  mutate(ep.backcountry=pr.backcountry*total_os*0.4, ep.endurance=pr.endurance*total_os*0.4, ep.racquet=pr.racquet*total_os*0.4, ep.team=pr.team*total_os*0.4, ep.water=pr.water*total_os*0.4, ep.winter=pr.winter*total_os*.4)
+  mutate(ep.backcountry=pr.backcountry*bucket_backcountry*0.4,
+         ep.endurance=pr.endurance*bucket_endurance*0.4,
+         ep.racquet=pr.racquet*bucket_racquet*0.4,
+         ep.team=pr.team*bucket_team*0.4,
+         ep.water=pr.water*bucket_water*0.4, 
+         ep.winter=pr.winter*bucket_winter*0.4,
+         ep.strength=pr.strength*bucket_strength*0.4)
 
 pent.test<- pent.test %>%
-   mutate(ep.max = pmax(ep.backcountry, ep.endurance, ep.water, ep.team, ep.winter, ep.racquet),
+   mutate(ep.max = pmax(ep.backcountry, ep.endurance, ep.water, ep.team, ep.winter, ep.racquet,ep.strength),
           mail.offer.ep=case_when(
              ep.backcountry==ep.max ~ "Backcountry",
              ep.endurance==ep.max~ "Endurance",
              ep.water==ep.max~ "Water",
              ep.team==ep.max ~ "Team",
              ep.winter==ep.max~ "Winter",
-             ep.racquet==ep.max ~ "Racquet"))
+             ep.racquet==ep.max ~ "Racquet",
+             ep.strength==ep.max~"Strength"))
 
 pent.test%>% tabyl(mail.offer.ep )
 
+```
+
+##Q5. Using the predicted profit for all consumers in the test sample, what profit can we obtain on average per e-mailed customer when we customize the message to each customer?
 
 
+```{r}
+pent.test %>%
+  group_by(mail.offer.ep) %>% 
+  summarise(sum_ep=sum(ep.max), num=n(),avg_ep_customer=sum_ep/num)
 
+pent.test %>% 
+   summarise_at(vars(ep.max),list(mean))
+```
 
+For total 180,000 customers in test sample, average estimated profit will be 0.72.
 
+##Q6. Using the predicted profit for all consumers in the test sample, what profit can Pentathlon obtain on average per e-mailed customer if every customer receives the same message? Answer the question for each of the seven possible message(endurance, strength, water, team, backcountry, winter, or racquet).
+
+```{r}
+pent.test %>% 
+   summarise_at(vars(ep.backcountry, ep.endurance,ep.racquet,ep.team,ep.water,ep.winter, ep.strength, ep.max),list(mean))
+```
+
+If all the customers get the same message, most profitable one will be Water category. But estimated profit will be 0.66 euro/customer which is lower than our prediction in Q5(0.72/customer)
+
+##Q7. Using the predicted profit for all consumers in the test sample, what profit can Pentathlon obtain on average per e-mailed customer if every customer is assigned at random to one of the seven messages?
+
+```{r}
+pent.test<- pent.test %>%
+   mutate(pr.random=case_when(
+             message=="backcountry" ~ pr.backcountry,
+             message=="endurance"~ pr.endurance,
+             message=="water"~pr.water,
+             message=="team"~pr.team,
+             message=="winter"~pr.winter,
+             message=="racquet"~pr.racquet,
+             message=="strength"~pr.strength))
+
+pent.test <- pent.test %>%
+  mutate(ep.random=case_when(
+             message=="backcountry" ~ pr.random*bucket_backcountry*0.4,
+             message=="endurance"~  pr.random*bucket_endurance*0.4,
+             message=="water"~ pr.random*bucket_water*0.4,
+             message=="team"~ pr.random*bucket_team*0.4,
+             message=="winter"~ pr.random*bucket_winter*0.4,
+             message=="racquet"~ pr.random*bucket_racquet*0.4,
+             message=="strength"~ pr.random*bucket_strength*0.4))
+
+pent.test %>% 
+   summarise_at(vars(ep.random, ep.max),list(mean))
 
 ```
 
+##Q8.what improvement (in percent and in total Euro) does Pentathlon expect to get from customizing the message to each customer rather than assigning customers a message at random?
+
+ If we send email at random, we get 0.57euro/ customer total of 2.88M Euro from 5M customers. 
+ But by targeting the customer we get 0.72euro/customer total of 3.60M Euro from 5M customers. 
+ Targeting increases the profit by25% (0.72/0.57-1)
+ 
+ 
+ ##Part 2. Comment on draft for new e-mail policy proposal
+ 
+  
