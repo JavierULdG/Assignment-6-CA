@@ -1,0 +1,7 @@
+"0","# Strength"
+"0",""
+"0","lr.strength <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,"
+"0","family=binomial, data=pent.train %>% filter(message==""strength""))"
+"0",""
+"0","pent.test <- pent.test %>%"
+"0","mutate(pr.strength = predict(lr.strength, newdata=pent.test, type=""response""))"

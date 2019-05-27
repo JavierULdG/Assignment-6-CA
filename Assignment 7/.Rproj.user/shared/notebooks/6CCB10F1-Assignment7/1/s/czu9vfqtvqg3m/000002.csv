@@ -1,0 +1,3 @@
+"0","pent.test %>%"
+"0","  group_by(mail.offer.ep) %>% "
+"0","  summarise(sum_ep=sum(ep.max), num=n(),avg_ep_customer=sum_ep/num)"
