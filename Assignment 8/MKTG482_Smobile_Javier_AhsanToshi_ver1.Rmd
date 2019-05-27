@@ -17,7 +17,7 @@ options(encoding = "utf-8")
  
 ##Load data and library
 ```{r}
-install.packages(glmnet)
+
 library(tidyverse)
 library(mktg482)
 library(nnet)
@@ -29,9 +29,6 @@ library(statar)
 library(mktg482)
 library(tidyverse)
 library(sjPlot)
-library(caret)
-library(glmnet)
-#library(printr)
 
 
 
@@ -63,12 +60,20 @@ pred_lr_training<-predict(smobile_training_lr, type="response")
 pred_lr_test<-predict(smobile_training_lr,newdata=smobile_test ,type="response")
 ```
 
-
 ##Predictions
 ```{r}
-pred_lr_training <- predict(smobile_training_lr,type="response")
+pred_lr_training <- predict(smobile_training_lr,data= smobile+training, type="response")
 pred_lr_test <- predict(smobile_training_lr, newdata=smobile_test,type="response")
+pred_lr_rollout <- predict(smobile_training_lr, newdata=rollout,type="response")
+rollout <- rollout %>% 
+  mutate(predictions=pred_lr_rollout)
+
 ```
+
+## Checking Model Effectiveness
+```{r}
+gainsplot(pred_lr_test, label.var =smobile_test$res )
+gainsplot(pred_lr_training, label.var =smobile_training$res )
 
 ## Plot Model
 ```{r}
