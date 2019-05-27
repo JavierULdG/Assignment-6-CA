@@ -1,0 +1,1 @@
+"0","gainsplot(smobile_training$lr_pred , label.var =smobile_training$churn)"

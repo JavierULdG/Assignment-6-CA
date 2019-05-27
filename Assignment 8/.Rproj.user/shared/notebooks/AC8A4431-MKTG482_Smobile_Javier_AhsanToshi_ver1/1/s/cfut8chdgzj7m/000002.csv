@@ -1,0 +1,6 @@
+"0","rollouttgt<- rollout%>%"
+"0","  mutate(eqpdays_ntile=ntile(eqpdays,5),mou_ntile=ntile(-mou,5))"
+"0",""
+"0","rollouttgt %>%"
+"0","  group_by(eqpdays_ntile) %>%"
+"0","  summarise ( mean_pred=mean(lr_pred),mean_eqpdays=mean(eqpdays),mean_spending=mean(revenue), mean_minutes=mean(mou))"

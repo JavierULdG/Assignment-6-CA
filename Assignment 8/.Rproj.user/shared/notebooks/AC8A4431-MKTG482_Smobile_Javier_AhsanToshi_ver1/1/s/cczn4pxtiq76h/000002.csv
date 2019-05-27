@@ -1,0 +1,4 @@
+"0","smobile_training$lr_pred <- predict(smobile_training_lr,data= smobile_training, type=""response"")"
+"0","smobile_test$lr_pred <- predict(smobile_training_lr, newdata=smobile_test,type=""response"")"
+"0","rollout$lr_pred <- predict(smobile_training_lr, newdata=rollout,type=""response"")"
+"0",""

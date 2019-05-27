@@ -1,0 +1,2 @@
+"0","smobile_training <- smobile %>% filter(training==1)"
+"0","smobile_test<-smobile %>% filter(training==0)"

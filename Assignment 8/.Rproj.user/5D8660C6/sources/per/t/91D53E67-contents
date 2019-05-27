@@ -17,13 +17,33 @@ options(encoding = "utf-8")
  
 ##Load data and library
 ```{r}
+
 library(tidyverse)
 library(mktg482)
 library(nnet)
+library(knitr)
+library(janitor)
+library(readxl)
+library(psych)
+library(statar)
+library(mktg482)
+library(tidyverse)
+library(sjPlot)
+
+
 
 rm(list=ls())
 set.seed(13579)
 load("smobile_churn.Rdata")
+```
+First, we tranform the data and convert categorical variables into factors
+
+```{r}
+
+sapply(smobile, function(x) length(unique(x)))
+
+smobile <- smobile %>% mutate(churn=factor(churn), children=factor(children),creditaa=factor(creditaa),travel=factor(travel))
+
 ```
 
 
@@ -34,10 +54,12 @@ smobile_training <- smobile %>% filter(training==1)
 smobile_test<-smobile %>% filter(training==0)
 ```
 
-## Develop Model
 
+
+
+## Develop Model
 ```{r}
-smobile_training_lr<-glm(churn~revenue+mou+overage+roam+changem+changer+dropvce+blckvce+unansvce+custcare+threeway+months+uniqsubs+phones+eqpdays+age+children+creditaa+refurb+occprof+occcler+occcrft+occstud+occhmkr+occret+occself+travel+retcalls+refer+incmiss+income+mcycle,family=binomial, data=smobile_training)
+smobile_training_lr<-glm(churn~revenue+mou+overage+roam+changem+changer+dropvce+blckvce+unansvce+custcare+threeway+months+uniqsubs+phones+eqpdays+age+children+creditaa+refurb+occprof+occcler+occcrft+occstud+occhmkr+occret+occself+travel+retcalls+refer+incmiss+income+mcycle, family=binomial, data=smobile_training)
 
 summary(smobile_training_lr)
 
@@ -45,18 +67,128 @@ summary(smobile_training_lr)
 cbind(COEF=coef(smobile_training_lr),confint(smobile_training_lr))
 exp(cbind(COEF=coef(smobile_training_lr),confint(smobile_training_lr)))
 
-pred_lr_training<-predict(smobile_training_lr, type="response")
-pred_lr_test<-predict(smobile_training_lr,newdata=smobile_test ,type="response")
 ```
-
 
 ##Predictions
 ```{r}
-pred_lr_training <- predict(smobile_training_lr,type="response")
-pred_lr_test <- predict(smobile_training_lr, newdata=smobile_test,type="response")
+smobile_training$lr_pred <- predict(smobile_training_lr,data= smobile_training, type="response")
+smobile_test$lr_pred <- predict(smobile_training_lr, newdata=smobile_test,type="response")
+rollout$lr_pred <- predict(smobile_training_lr, newdata=rollout,type="response")
+
 ```
 
-## Gains Plot
+## Checking Model Effectiveness
 ```{r}
-#gainsplot(pred_lr_test,label.var =smobile_test$res)
+gainsplot(smobile_test$lr_pred , label.var =smobile_test$churn)
+gainsplot(smobile_training$lr_pred , label.var =smobile_training$churn)
+```
+
+## Plot Predictions
+```{r}
+plot_model(smobile_training_lr)
+plot_model(smobile_training_lr,type="pred")
+```
+
+## Variable Importance
+```{r}
+varimp.logistic(smobile_training_lr)
+```
+## Variable Importance Chart
+```{r}
+varimp.logistic(smobile_training_lr) %>% plotimp.logistic()
+# Important Variables [Vr imp >1.40] 
+#1. Home-maker occupation 
+#2. # of days of current equipment
+#3. Crafts occupation
+#4. Mean monthly minutes of use
+#5. Age
+#6. Mean # of blocked calls
+#7. Months in service
+```
+
+
+Given this variables, we realize that we cant influence Ocupation or client parameters or behaviour, but we can target customers who have older equipment or have low months of use.
+## Avg customer spend over lifetime
+```{r}
+smobile%>%
+  group_by(churn) %>%
+  summarise(mean_revenue=mean(revenue))
+#Similar monthly spending for both categories
+```
+
+## Testing who to target
+```{r}
+rollouttgt<- rollout%>%
+  mutate(eqpdays_ntile=ntile(eqpdays,5),mou_ntile=ntile(-mou,5))
+
+rollouttgt %>%
+  group_by(eqpdays_ntile) %>%
+  summarise ( mean_pred=mean(lr_pred),mean_eqpdays=mean(eqpdays),mean_spending=mean(revenue), mean_minutes=mean(mou))
+
+rollouttgt %>%
+  group_by(mou_ntile) %>%
+  summarise ( mean_pred=mean(lr_pred),mean_eqpdays=mean(eqpdays),mean_spending=mean(revenue), mean_minutes=mean(mou))
+
+
+```
+
+
+## Testing the effect of changing the equipment for the lowest n_tile (eqpdays=0)
+```{r}
+rollout_1 <-rollouttgt
+
+rollout_1<-rollout_1 %>% mutate(eqpdays=ifelse(eqpdays_ntile==5,0,eqpdays))
+
+rollout_1$test1<- predict(smobile_training_lr, newdata=rollout_1,type="response")
+
+rollout_1%>% summarise(base=mean(lr_pred),test=mean(test1))
+
+#We can test the churn only for the desired segment
+
+rollout_1%>% filter(eqpdays_ntile==5)%>% summarise(base=mean(lr_pred),test=mean(test1))
+
+#we can observe a steep decline in the churn chance in the specified segment
+
+```
+
+
+## Now, we can test the effect of changing the equipment for everyone
+```{r}
+rollout_1 <-rollouttgt
+
+rollout_1<-rollout_1 %>% mutate(eqpdays=0)
+
+rollout_1$test1<- predict(smobile_training_lr, newdata=rollout_1,type="response")
+
+rollout_1%>% summarise(base=mean(lr_pred),test=mean(test1))
+```
+
+
+
+## Blocked voice
+```{r}
+rollout_1 <-rollouttgt
+
+rollout_1<-rollout_1%>% mutate(blckvce_ntile=ntile(blckvce,5))
+
+rollout_1<-rollout_1 %>% mutate(blckvce=ifelse(blckvce_ntile==5,blckvce/2,blckvce))
+
+rollout_1$test1<- predict(smobile_training_lr, newdata=rollout_1,type="response")
+
+rollout_1%>% summarise(base=mean(lr_pred),test=mean(test1))
+
+rollout_1%>% filter(blckvce_ntile==5)%>% summarise(base=mean(lr_pred),test=mean(test1))
+```
+
+## Referals: Create a Campaign that incentivises people to send referalsa dn get their friends to join if they have not made a referal yet
+```{r}
+rollout_1 <-rollouttgt
+
+rollout_1<-rollout_1 %>% mutate(testing=ifelse(refer==0,1,refer), refer=ifelse(refer==0,1,refer))
+
+rollout_1$test1<- predict(smobile_training_lr, newdata=rollout_1,type="response")
+
+rollout_1%>% summarise(base=mean(lr_pred),test=mean(test1))
+
+rollout_1%>% filter(testing==1)%>% summarise(base=mean(lr_pred),test=mean(test1))
 ```

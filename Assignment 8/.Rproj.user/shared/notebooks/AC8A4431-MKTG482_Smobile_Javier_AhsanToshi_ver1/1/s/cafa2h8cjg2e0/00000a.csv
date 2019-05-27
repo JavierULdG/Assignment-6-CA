@@ -1,0 +1,4 @@
+"0",""
+"0","#We can test the churn only for the desired segment"
+"0",""
+"0","rollout_1%>% filter(eqpdays_ntile==5)%>% summarise(base=mean(lr_pred),test=mean(test1))"

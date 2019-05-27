@@ -1,0 +1,4 @@
+"0",""
+"0","rollouttgt %>%"
+"0","  group_by(mou_ntile) %>%"
+"0","  summarise ( mean_pred=mean(lr_pred),mean_eqpdays=mean(eqpdays),mean_spending=mean(revenue), mean_minutes=mean(mou))"

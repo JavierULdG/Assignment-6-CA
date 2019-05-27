@@ -1,0 +1,3 @@
+"0","smobile%>%"
+"0","  group_by(churn) %>%"
+"0","  summarise(mean_revenue=mean(revenue))"
