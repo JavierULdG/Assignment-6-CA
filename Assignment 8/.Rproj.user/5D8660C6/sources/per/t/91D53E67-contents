@@ -1,0 +1,62 @@
+---
+title: "S Mobile"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(encoding = "utf-8")
+
+```
+
+#Intuit Online Case
+ This is a group assignment for MKTG482. 
+ Group member: Javier Urbina, Ahsan Kamran, Toshi Murakami
+ 
+##Load data and library
+```{r}
+library(tidyverse)
+library(mktg482)
+library(nnet)
+
+rm(list=ls())
+set.seed(13579)
+load("smobile_churn.Rdata")
+```
+
+
+##Split Data into test and training
+
+```{r}
+smobile_training <- smobile %>% filter(training==1)
+smobile_test<-smobile %>% filter(training==0)
+```
+
+## Develop Model
+
+```{r}
+smobile_training_lr<-glm(churn~revenue+mou+overage+roam+changem+changer+dropvce+blckvce+unansvce+custcare+threeway+months+uniqsubs+phones+eqpdays+age+children+creditaa+refurb+occprof+occcler+occcrft+occstud+occhmkr+occret+occself+travel+retcalls+refer+incmiss+income+mcycle,family=binomial, data=smobile_training)
+
+summary(smobile_training_lr)
+
+#Adding Odds Rations
+cbind(COEF=coef(smobile_training_lr),confint(smobile_training_lr))
+exp(cbind(COEF=coef(smobile_training_lr),confint(smobile_training_lr)))
+
+pred_lr_training<-predict(smobile_training_lr, type="response")
+pred_lr_test<-predict(smobile_training_lr,newdata=smobile_test ,type="response")
+```
+
+
+##Predictions
+```{r}
+pred_lr_training <- predict(smobile_training_lr,type="response")
+pred_lr_test <- predict(smobile_training_lr, newdata=smobile_test,type="response")
+```
+
+## Gains Plot
+```{r}
+#gainsplot(pred_lr_test,label.var =smobile_test$res)
+```

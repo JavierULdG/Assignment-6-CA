@@ -1,0 +1,2 @@
+"0","pent.test %>% "
+"0","   summarise_at(vars(ep.backcountry, ep.endurance,ep.racquet,ep.team,ep.water,ep.winter, ep.strength, ep.max),list(mean))"
