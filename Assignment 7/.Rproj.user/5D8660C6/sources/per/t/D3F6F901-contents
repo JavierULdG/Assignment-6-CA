@@ -1,0 +1,282 @@
+---
+title: "Pentathlon (Part III)"
+
+author:
+- name: "Section 32"
+- name: "Ahsan Kamran"
+- name: "Toshi Murakami"
+- name: "Javier Urbina"
+
+output:
+  pdf_document:
+    number_sections: yes
+    fig_caption: yes
+  html_notebook: default
+  html_document:
+    df_print: paged
+---
+
+# Preliminaries
+
+### Determine notebook defaults:
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE,      # Print all the code in all the chunks
+                      warning=FALSE,  # Don't print warning statements
+                      message=FALSE,  # Don't print other R output messages
+                      comment=NA)     # Helps produce prettier output
+```
+
+### Load packages:
+```{r, echo=FALSE, message = FALSE, warning = FALSE}
+
+library(gmodels)
+library(modelr)
+library(janitor)
+library(haven)
+library(readxl)
+library(knitr)
+library(psych)
+library(statar)
+library(tidyverse)
+
+
+```
+
+
+### Read in the data:
+```{r}
+load("PentathlonTargeting.Rdata")
+
+pent <- pent %>% mutate(age=factor(age), female=factor(female), buyer=factor(buyer))
+
+#Now we create the training and testing split
+
+pent.train<- pent%>% filter(training==1)
+pent.test<- pent%>% filter(training==0)
+```
+
+# Part 1 Analyising the different offers
+
+Type your answer text here, intervowen with blocks of R code
+
+```{r }
+# First  we create a logistic regression model for every type of offer ( endurance, backcountry, etc)
+
+lr.backcountry <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %>% filter(message=="backcountry"))
+
+pent.test <- pent.test %>%
+mutate(pr.backcountry = predict(lr.backcountry, newdata=pent.test, type="response"))
+```
+
+
+And we repeat for every other message
+
+```{r}
+# Endurance
+
+lr.endurance <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %>% filter(message=="endurance"))
+
+pent.test <- pent.test %>%
+mutate(pr.endurance = predict(lr.endurance, newdata=pent.test, type="response"))
+```
+
+
+
+```{r}
+# Strength
+
+lr.strength <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %>% filter(message=="strength"))
+
+pent.test <- pent.test %>%
+mutate(pr.strength = predict(lr.strength, newdata=pent.test, type="response"))
+```
+
+```{r}
+#Water
+
+lr.water <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %>% filter(message=="water"))
+
+pent.test <- pent.test %>%
+mutate(pr.water = predict(lr.water, newdata=pent.test, type="response"))
+```
+
+```{r}
+#Team
+
+lr.team <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %>% filter(message=="team"))
+
+pent.test <- pent.test %>%
+mutate(pr.team = predict(lr.team, newdata=pent.test, type="response"))
+```
+
+```{r}
+#Winter
+
+lr.winter <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %>% filter(message=="winter"))
+
+pent.test <- pent.test %>%
+mutate(pr.winter = predict(lr.winter, newdata=pent.test, type="response"))
+```
+
+```{r}
+#Racquet
+
+lr.racquet <- glm(buyer ~ age + female + income + education + children+ freq_endurance+freq_strength+freq_water+freq_team+freq_backcountry+freq_winter+freq_racquet,
+family=binomial, data=pent.train %>% filter(message=="racquet"))
+
+pent.test <- pent.test %>%
+mutate(pr.racquet = predict(lr.racquet, newdata=pent.test, type="response"))
+```
+
+## Question 2
+```{r}
+
+pent.test<- pent.test %>%
+   mutate(pr.max = pmax(pr.backcountry, pr.endurance, pr.water, pr.team, pr.winter, pr.racquet,pr.strength),
+          mail.offer=case_when(
+             pr.backcountry==pr.max ~ "Backcountry",
+             pr.endurance==pr.max~ "Endurance",
+             pr.water==pr.max~ "Water",
+             pr.team==pr.max ~ "Team",
+             pr.winter==pr.max~ "Winter",
+             pr.racquet==pr.max ~ "Racquet",
+             pr.strength==pr.max~"Strength"))
+
+pent.test%>% tabyl(mail.offer )
+
+
+```
+
+## Question 3
+
+
+```{r}
+
+
+pent.test %>% filter(buyer==1) %>% 
+  group_by(message) %>% 
+   summarise(avg_os_backcountry= mean(backcountry_os), 
+             avg_os_endurance=mean(endurance_os), 
+             avg_os_racquet=mean(racquet_os), 
+             avg_os_team=mean(team_os),
+             avg_os_water=mean(water_os),
+             avg_os_winter=mean(winter_os),
+             avg_os_strength=mean(strength_os),
+             avg_os_sum=avg_os_strength+avg_os_winter+avg_os_water+avg_os_team+avg_os_racquet+avg_os_backcountry+avg_os_endurance,
+             avg_total=mean(total_os))
+#calculate bucket size for each of message. Bucket size for endurance 56.13240 / strength 56.46285 /team...
+
+
+pent.test<- pent.test %>% 
+  mutate(bucket_endurance=56.13240, 
+         bucket_strength=56.46285,
+         bucket_water=65.00817,
+         bucket_team=60.43344,
+         bucket_backcountry=61.62745, 
+         bucket_winter=57.28686,
+         bucket_racquet=57.58275)
+
+pent.test <- pent.test %>%
+  mutate(ep.backcountry=pr.backcountry*bucket_backcountry*0.4,
+         ep.endurance=pr.endurance*bucket_endurance*0.4,
+         ep.racquet=pr.racquet*bucket_racquet*0.4,
+         ep.team=pr.team*bucket_team*0.4,
+         ep.water=pr.water*bucket_water*0.4, 
+         ep.winter=pr.winter*bucket_winter*0.4,
+         ep.strength=pr.strength*bucket_strength*0.4)
+
+pent.test<- pent.test %>%
+   mutate(ep.max = pmax(ep.backcountry, ep.endurance, ep.water, ep.team, ep.winter, ep.racquet,ep.strength),
+          mail.offer.ep=case_when(
+             ep.backcountry==ep.max ~ "Backcountry",
+             ep.endurance==ep.max~ "Endurance",
+             ep.water==ep.max~ "Water",
+             ep.team==ep.max ~ "Team",
+             ep.winter==ep.max~ "Winter",
+             ep.racquet==ep.max ~ "Racquet",
+             ep.strength==ep.max~"Strength"))
+
+pent.test%>% tabyl(mail.offer.ep )
+
+```
+
+## Question 5 
+Using the predicted profit for all consumers in the test sample, what profit can we obtain on average per e-mailed customer when we customize the message to each customer?
+
+
+```{r}
+pent.test %>%
+  group_by(mail.offer.ep) %>% 
+  summarise(sum_ep=sum(ep.max), num=n(),avg_ep_customer=sum_ep/num)
+
+pent.test %>% 
+   summarise_at(vars(ep.max),list(mean))
+```
+
+For total 180,000 customers in test sample, average estimated profit will be 0.72.
+
+## Question 6 
+Using the predicted profit for all consumers in the test sample, what profit can Pentathlon obtain on average per e-mailed customer if every customer receives the same message? Answer the question for each of the seven possible message(endurance, strength, water, team, backcountry, winter, or racquet).
+
+```{r}
+pent.test %>% 
+   summarise_at(vars(ep.backcountry, ep.endurance,ep.racquet,ep.team,ep.water,ep.winter, ep.strength, ep.max),list(mean))
+```
+
+If all the customers get the same message, most profitable one will be Water category. But estimated profit will be 0.66 euro/customer which is lower than our prediction in Q5(0.72/customer)
+
+## Question 7
+Using the predicted profit for all consumers in the test sample, what profit can Pentathlon obtain on average per e-mailed customer if every customer is assigned at random to one of the seven messages?
+
+```{r}
+pent.test<- pent.test %>%
+   mutate(pr.random=case_when(
+             message=="backcountry" ~ pr.backcountry,
+             message=="endurance"~ pr.endurance,
+             message=="water"~pr.water,
+             message=="team"~pr.team,
+             message=="winter"~pr.winter,
+             message=="racquet"~pr.racquet,
+             message=="strength"~pr.strength))
+
+pent.test <- pent.test %>%
+  mutate(ep.random=case_when(
+             message=="backcountry" ~ pr.random*bucket_backcountry*0.4,
+             message=="endurance"~  pr.random*bucket_endurance*0.4,
+             message=="water"~ pr.random*bucket_water*0.4,
+             message=="team"~ pr.random*bucket_team*0.4,
+             message=="winter"~ pr.random*bucket_winter*0.4,
+             message=="racquet"~ pr.random*bucket_racquet*0.4,
+             message=="strength"~ pr.random*bucket_strength*0.4))
+
+pent.test %>% 
+   summarise_at(vars(ep.random, ep.max),list(mean))
+
+```
+
+## Question 8
+what improvement (in percent and in total Euro) does Pentathlon expect to get from customizing the message to each customer rather than assigning customers a message at random?
+
+ If we send email at random, we get 0.57euro/ customer total of 2.88M Euro from 5M customers. 
+ But by targeting the customer we get 0.72euro/customer total of 3.60M Euro from 5M customers. 
+ Targeting increases the profit by25% (0.72/0.57-1)
+ 
+ 
+# Part 2. Comment on draft for new e-mail policy proposal
+ 
+ 
+1- Keeping the same 2 categories in place for an entire month could result in diminishing returns, lowering overall profitability.
+
+2- By only exposing customers to the selected two categories and then using the data gathered will lead to biases and loss of information.
+
+3- For the seasonal categories, it would be a mistake to use the past purchases because of their short lifespan. Another method would be use the same model for last year for the first month of the season and then improve upon that.
+
+4- As a recomendation, the last week or two of every month could be used as a test for other categories and keep the customers preferences updated, and generating good data for future promotions
+ 
+  
