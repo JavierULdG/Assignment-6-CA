@@ -75,10 +75,8 @@ rollout <- rollout %>%
 gainsplot(pred_lr_test, label.var =smobile_test$res )
 gainsplot(pred_lr_training, label.var =smobile_training$res )
 
-## Plot Model
-```{r}
-plot_model(smobile_training_lr)
 ```
+
 ## Plot Predictions
 ```{r}
 plot_model(smobile_training_lr,type="pred")
@@ -99,4 +97,24 @@ varimp.logistic(smobile_training_lr) %>% plotimp.logistic()
 #5. Age
 #6. Mean # of blocked calls
 #7. Months in service
+```
+
+## Avg customer spend over lifetime
+```{r}
+smobile%>%
+  group_by(churn) %>%
+  summarise(mean_revenue=mean(revenue))
+#Similar monthly spending for both categories
+```
+
+## Testing who to target
+```{r}
+rollouttgt<- rollout%>%
+  mutate(eqpdays_ntile=ntile(eqpdays,5),mou_ntile=ntile(mou,5))
+
+mou_eqp.df <-rollouttgt %>%
+  group_by(eqpdays_ntile,mou_ntile) %>%
+  summarise(mean_pred=mean(predictions),mean_eqpdays=mean(eqpdays),mean_spending=mean(revenue), mean_minutes=mean(mou)
+mou_eqp.df
+
 ```
