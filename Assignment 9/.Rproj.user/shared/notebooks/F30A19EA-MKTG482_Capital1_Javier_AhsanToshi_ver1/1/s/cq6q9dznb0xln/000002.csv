@@ -47,17 +47,4 @@ Please re-install 'TMB' from source using install.packages('TMB', type = 'source
 "
 "0","rm(list=ls())"
 "0","set.seed(13579)"
-"0","data1<- read_csv(""Data1.csv"")"
-"2","Missing column names filled in: 'X5' [5]"
-"2","Parsed with column specification:
-cols(
-  Date = [31mcol_character()[39m,
-  APR = [32mcol_double()[39m,
-  `Fix/Var.` = [31mcol_character()[39m,
-  `Annual Fee` = [31mcol_character()[39m,
-  X5 = [31mcol_character()[39m,
-  `Acts Mailed` = [32mcol_number()[39m,
-  Avg. = [32mcol_number()[39m,
-  BK = [32mcol_double()[39m
-)
-"
+"0",""

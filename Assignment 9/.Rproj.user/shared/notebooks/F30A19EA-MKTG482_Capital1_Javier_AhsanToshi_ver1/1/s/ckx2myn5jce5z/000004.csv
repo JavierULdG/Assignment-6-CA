@@ -1,0 +1,3 @@
+"0","accounts_lr<-glm(sale~ APR + Date + Annual_Fee + VISA_MC + BK, family=binomial, data=data1, maxit=1000)"
+"2","
+"
