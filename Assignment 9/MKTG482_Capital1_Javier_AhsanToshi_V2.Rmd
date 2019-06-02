@@ -70,3 +70,12 @@ lr.data1 <-glm(cbind(Sales,Fails)~APR*Fix_Var*Annual_Fee*BK, data=data1_count, f
 summary(lr.data1)
 
 ```
+# Now we will undertand how the difference in revenue
+
+```{r}
+data2<- read_csv("Data2.csv")
+
+LTV.reg <-lm(LTV ~ APR + Fixed_Var+Fee + BK, data2)
+LTV.reg
+
+```
