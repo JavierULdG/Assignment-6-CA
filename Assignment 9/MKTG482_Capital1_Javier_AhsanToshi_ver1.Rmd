@@ -29,6 +29,7 @@ library(statar)
 library(mktg482)
 library(tidyverse)
 library(sjPlot)
+library(AlgDesign)
 
 
 
@@ -42,7 +43,7 @@ First, we tranform the data and convert categorical variables into factors
 data1_count<- read_csv("Data1.csv")
 data2<- read_csv("Data2.csv")
 
-data1_count<-data1_count%>% mutate(Fix_Var=factor(Fix_Var), Date=factor(Date),APR=factor(APR), Annual_Fee=factor(Annual_Fee), VISA_MC=factor(VISA_MC), `BK`=factor(`BK`), sale=factor(sale))
+
 
 data1<-uncount(data1_count, `Accounts`)
 
@@ -50,10 +51,31 @@ str(data1)
 ```
 
 
-##Split Data into test and training
+##generate fractional designs 
+```{r}
+exp.design <- list(APR=c("14.9","16.8","19.8"),
+                   Fee=c("0","20"),
+                   Rate=c("Fixed","Variable"))
+full.design <- expand.grid(exp.design)
+full.design
+frac.design <-optFederov(data=full.design, nTrials=5)
+frac.design$design
+```
+
+##Analyzing experimental data
+```{r}
+lr.data1 <-glm(sale~APR*Fix_Var*Annual_Fee*VISA_MC*BK, data=data1_count, family=binomial)
+summary(lr.data1)
+
+#We cannot choose to 
+lr.data1 <-glm(sale~APR*Fix_Var*Annual_Fee*VISA_MC*BK, data=data1_count, family=binomial)
+summary(lr.data1)
+
+```
+
 
 ```{r}
-accounts_lr<-glm(sale~ APR + Date + Annual_Fee + VISA_MC + BK, family=binomial, data=data1, maxit=1000)
+accounts_lr<-glm(sale~ APR + Date + Annual_Fee + VISA_MC + BK, family=binomial, data=data1)
 ```
 
 

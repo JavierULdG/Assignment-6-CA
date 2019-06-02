@@ -1,0 +1,15 @@
+﻿Date,APR,Fix_Var,Annual_Fee,VISA_MC,BK,Fails,Sales
+April ’91,16.8,Fixed,20,MC,210,165467,1533
+April ’91,16.8,Fixed,0,MC,210,78104,2896
+April ’91,19.8,Fixed,20,MC,210,142410,590
+April ’91,19.8,Fixed,0,MC,210,97948,2052
+Sept. ’91,14.9,Fixed,20,Visa,255,172671,4329
+Sept. ’91,14.9,Var.,20,Visa,255,166996,3004
+Sept. ’91,16.8,Fixed,20,Visa,255,252017,2983
+Sept. ’91,19.8,Fixed,20,Visa,255,34825,175
+Sept. ’91,16.8,Fixed,0,Visa,255,62484,2516
+Sept. ’91,19.8,Fixed,0,Visa,255,92885,2115
+Nov. ’91,14.9,Fixed,20,Visa,190,80239,1761
+Nov. ’91,14.9,Fixed,0,Visa,190,47549,2451
+Nov. ’91,14.9,Var.,20,Visa,190,49292,708
+Nov. ’91,16.8,Fixed,20,Visa,190,49628,372
