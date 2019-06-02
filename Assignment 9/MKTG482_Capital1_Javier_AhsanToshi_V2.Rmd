@@ -40,7 +40,7 @@ set.seed(13579)
 First, we tranform the data and convert categorical variables into factors
 
 ```{r}
-data1_count<- read_csv("Data1v2.csv")
+data1_count<- read_csv("Data1v3.csv")
 
 
 data1_count<-data1_count%>% mutate(Fix_Var=factor(Fix_Var), Date=factor(Date),APR=factor(APR), Annual_Fee=factor(Annual_Fee), VISA_MC=factor(VISA_MC), `BK`=factor(`BK`))

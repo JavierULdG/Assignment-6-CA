@@ -1,0 +1,103 @@
+---
+title: "Capital 1"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(encoding = "utf-8")
+
+```
+
+#Capital 1 Online Case
+ This is a group assignment for MKTG482. 
+ Group member: Javier Urbina, Ahsan Kamran, Toshi Murakami
+ 
+##Load data and library
+```{r}
+
+library(tidyverse)
+library(mktg482)
+library(nnet)
+library(knitr)
+library(janitor)
+library(readxl)
+library(psych)
+library(statar)
+library(mktg482)
+library(tidyverse)
+library(sjPlot)
+library(AlgDesign)
+
+
+
+rm(list=ls())
+set.seed(13579)
+
+```
+First, we tranform the data and convert categorical variables into factors
+
+```{r}
+data1_count<- read_csv("Data1v2.csv")
+
+
+data1_count<-data1_count%>% mutate(Fix_Var=factor(Fix_Var),APR=factor(APR), Annual_Fee=factor(Annual_Fee))
+
+```
+
+```{r}
+##Generate Fractional Design
+exp.design <- list(APR=c("14.9","16.8","19.8"),
+                   Annual_Fee=c("0","20"),
+                   Fix_Var=c("Fixed","Var."))
+full.design <- expand.grid(exp.design)
+full.design
+frac.design <-optFederov(data=full.design, nTrials=5)
+frac.design$design
+get.estimable.coefficients(full.design, frac.design)
+
+```
+
+##Analyzing experimental data
+```{r}
+lr.data1 <-glm(cbind(Sales,Fails)~APR*Fix_Var*Annual_Fee, data=data1_count, family=binomial)
+summary(lr.data1)
+
+#We cannot choose Visa/Master Card so I ignored VISA_MC
+lr.data1 <-glm(cbind(Sales,Fails)~APR*Fix_Var*Annual_Fee*, data=data1_count, family=binomial)
+summary(lr.data1)
+
+
+```
+
+## Adding results to full design
+```{r}
+full.design.results <- full.design %>%
+  mutate(sales=c(0.051546825,0.038672537, 0.021859992,0.023508866, 0.010550595, 0.004584047, NA,NA,NA,0.01617592,NA,NA))
+full.design.results
+
+```
+
+## Adding Predicted Reponses to Full Design
+```{r}
+full.design.results <- full.design.results %>%
+mutate(pred = predict(lr.data1, newdata=full.design.results, type="response"),
+pred_sales = 10000*pred)
+full.design.results
+
+```
+##Now we will undertand how the difference in revenue
+
+```{r}
+data2<- read_csv("Data2.csv")
+data2<-data2%>% mutate(Fix_Var=factor(Fix_Var),APR=factor(APR), Annual_Fee=factor(Annual_Fee),  `BK`=factor(`BK`))
+
+LTV.reg <-lm(LTV ~ APR + Fix_Var+Annual_Fee + BK, data2)
+LTV.reg
+
+```
+
+# Predicting probability of sale for each product type and BK level
+```{r}
