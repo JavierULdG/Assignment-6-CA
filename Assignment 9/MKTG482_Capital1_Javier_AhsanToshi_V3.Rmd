@@ -85,3 +85,22 @@ frac.design <-optFederov(data=full.design, nTrials=5)
 frac.design$design
 
 ```
+
+##Analyzing experimental data-3
+```{r}
+
+data3 <- read_csv("Data3.csv")
+data3<-data3%>% mutate(Fix_Var=factor(Fix_Var),APR=factor(APR), Annual_Fee=factor(Annual_Fee),  `BK`=factor(`BK`))
+lr.data3 <-glm(cbind(Sales,Fails)~APR*Fix_Var*Annual_Fee*BK, data=data3, family=binomial)
+summary(lr.data3)
+
+```
+
+
+##Now we will undertand how the difference in revenue based on the experiment we ran and results we got
+
+```{r}
+data2 <- data2 %>% mutate (pred_sales2=predict(lr.data3, newdata=data2, type="response"), Expected_Revenue2=pred_sales2*LTV )
+data2
+data2%>%group_by(APR,Fix_Var, Annual_Fee)%>% summarise(mean(Expected_Revenue2))
+```
