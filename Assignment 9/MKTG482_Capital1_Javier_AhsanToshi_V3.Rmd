@@ -41,11 +41,38 @@ First, we tranform the data and convert categorical variables into factors
 
 ```{r}
 data1_count<- read_csv("Data1v2.csv")
-
-
 data1_count<-data1_count%>% mutate(Fix_Var=factor(Fix_Var),APR=factor(APR), Annual_Fee=factor(Annual_Fee))
 
 ```
+##Analyzing experimental data
+```{r}
+
+#We cannot choose Visa/Master Card so I ignored VISA_MC
+lr.data1 <-glm(cbind(Sales,Fails)~APR*Fix_Var*Annual_Fee, data=data1_count, family=binomial)
+summary(lr.data1)
+
+```
+
+
+##Now we will undertand how the difference in revenue
+
+```{r}
+data2<- read_csv("Data2.csv")
+data2<-data2%>% mutate(Fix_Var=factor(Fix_Var),APR=factor(APR), Annual_Fee=factor(Annual_Fee),  `BK`=factor(`BK`))
+LTV.reg <-lm(LTV ~ APR + Fix_Var+Annual_Fee + BK, data2)
+LTV.reg
+
+data2 <- data2 %>% mutate (pred_sales=predict(lr.data1, newdata=data2, type="response"), Expected_Revenue=pred_sales*LTV )
+data2
+data2%>%group_by(APR,Fix_Var, Annual_Fee)%>% summarise(mean(Expected_Revenue))
+```
+
+Knowing the expected revenue will help us determine who to send the mails. We have a strong incentive to test only a few variations given the aditional $1000 per variation tested and we also want to mail clients whose expected revenue is higher than the mailing cost of .5.
+
+
+For example, for 
+
+
 
 ```{r}
 ##Generate Fractional Design
@@ -56,48 +83,5 @@ full.design <- expand.grid(exp.design)
 full.design
 frac.design <-optFederov(data=full.design, nTrials=5)
 frac.design$design
-get.estimable.coefficients(full.design, frac.design)
 
 ```
-
-##Analyzing experimental data
-```{r}
-lr.data1 <-glm(cbind(Sales,Fails)~APR*Fix_Var*Annual_Fee, data=data1_count, family=binomial)
-summary(lr.data1)
-
-#We cannot choose Visa/Master Card so I ignored VISA_MC
-lr.data1 <-glm(cbind(Sales,Fails)~APR*Fix_Var*Annual_Fee*, data=data1_count, family=binomial)
-summary(lr.data1)
-
-
-```
-
-## Adding results to full design
-```{r}
-full.design.results <- full.design %>%
-  mutate(sales=c(0.051546825,0.038672537, 0.021859992,0.023508866, 0.010550595, 0.004584047, NA,NA,NA,0.01617592,NA,NA))
-full.design.results
-
-```
-
-## Adding Predicted Reponses to Full Design
-```{r}
-full.design.results <- full.design.results %>%
-mutate(pred = predict(lr.data1, newdata=full.design.results, type="response"),
-pred_sales = 10000*pred)
-full.design.results
-
-```
-##Now we will undertand how the difference in revenue
-
-```{r}
-data2<- read_csv("Data2.csv")
-data2<-data2%>% mutate(Fix_Var=factor(Fix_Var),APR=factor(APR), Annual_Fee=factor(Annual_Fee),  `BK`=factor(`BK`))
-
-LTV.reg <-lm(LTV ~ APR + Fix_Var+Annual_Fee + BK, data2)
-LTV.reg
-
-```
-
-# Predicting probability of sale for each product type and BK level
-```{r}
